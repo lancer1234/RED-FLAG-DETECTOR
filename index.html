@@ -49,12 +49,20 @@
 
         <div class="choices" id="choices"></div>
         <div class="feedback hidden" id="feedback" role="status"></div>
+
+        <section class="interaction-panel hidden" id="interactionPanel" aria-live="polite">
+          <div class="interaction-kicker" id="interactionKicker">RESPONSE</div>
+          <div class="interaction-speaker" id="interactionSpeaker"></div>
+          <div class="interaction-text" id="interactionText"></div>
+          <div class="story-beat hidden" id="storyBeat"></div>
+          <button type="button" class="continue-btn" id="continueBtn">好吧，繼續 / CONTINUE</button>
+        </section>
       </div>
     </section>
 
     <footer class="foot">
       <span>RELATIONSHIP LAB</span>
-      <span>BUILD 3.1</span>
+      <span>BUILD 3.2</span>
     </footer>
   </main>
 
@@ -67,7 +75,7 @@
         LOADING PEOPLE PATTERNS...<br>
         CALIBRATING DECISION PROFILE...
       </div>
-      <p>直接看情境，選擇妳真的會做的反應。題庫會大量隨機抽題，同一類人物的行為邏輯會維持一致，部分局會出現連續事件與稀有角色。</p>
+      <p>直接看情境，選擇妳真的會做的反應。不同人物會依照自己的個性回應妳；部分關鍵選擇還會觸發額外劇情。</p>
 
       <div class="mode-picker" aria-label="選擇遊戲模式">
         <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 題</small></button>
@@ -110,6 +118,7 @@
   </section>
 
   <script src="data.js"></script>
+  <script src="interactions.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
