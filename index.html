@@ -47,22 +47,14 @@
           <div class="quote" id="quote"></div>
         </div>
 
-        <section class="judge" id="judgePanel">
-          <div class="judge-title">FIRST INSTINCT // 這是警訊嗎？</div>
-          <div class="judge-buttons">
-            <button type="button" class="judge-btn red" data-flag="red">RED FLAG</button>
-            <button type="button" class="judge-btn green" data-flag="green">GREEN FLAG</button>
-          </div>
-        </section>
-
-        <div class="choices hidden" id="choices"></div>
+        <div class="choices" id="choices"></div>
         <div class="feedback hidden" id="feedback" role="status"></div>
       </div>
     </section>
 
     <footer class="foot">
       <span>RELATIONSHIP LAB</span>
-      <span>BUILD 3.0</span>
+      <span>BUILD 3.1</span>
     </footer>
   </main>
 
@@ -73,9 +65,9 @@
       <div class="bootline">
         BOOTING RELATIONSHIP OS...<br>
         LOADING PEOPLE PATTERNS...<br>
-        CALIBRATING RED FLAG RADAR...
+        CALIBRATING DECISION PROFILE...
       </div>
-      <p>每題先判斷 RED / GREEN FLAG，再選擇妳真的會做的反應。題庫會大量隨機抽題，同一人物的行為會維持一致，部分局會出現連續事件與稀有檔案。</p>
+      <p>直接看情境，選擇妳真的會做的反應。題庫會大量隨機抽題，同一類人物的行為邏輯會維持一致，部分局會出現連續事件與稀有角色。</p>
 
       <div class="mode-picker" aria-label="選擇遊戲模式">
         <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 題</small></button>
@@ -83,7 +75,7 @@
       </div>
 
       <button class="pxbtn" id="startBtn">開始掃描 / START SCAN</button>
-      <div class="hint">判斷階段可用 R / G；選擇階段可用 A / B / C</div>
+      <div class="hint">可使用鍵盤 A / B / C 選擇答案</div>
     </div>
   </section>
 
@@ -98,12 +90,6 @@
         <div class="rbox">RADAR<b id="r1"></b></div>
         <div class="rbox">STANDARD<b id="r2"></b></div>
         <div class="rbox">CHAOS<b id="r3"></b></div>
-      </div>
-
-      <div class="detection-box">
-        <span>FLAG DETECTION</span>
-        <b id="detectionRate">0%</b>
-        <small id="detectionDetail"></small>
       </div>
 
       <div class="summary-line" id="summaryLine"></div>
