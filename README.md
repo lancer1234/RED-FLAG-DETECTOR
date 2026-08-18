@@ -5,9 +5,10 @@ A mobile-first relationship scenario game built with plain HTML, CSS and JavaScr
 ## Structure
 
 - `index.html` — UI structure and overlays
-- `styles.css` — visual system, responsive layout and animations
-- `data.js` — personas, scenario library and reusable reaction sets
-- `app.js` — deck generation, scoring, rendering, story arcs and result logic
+- `styles.css` — visual system, responsive layout and interaction states
+- `data.js` — personas and the 132-scenario content library
+- `interactions.js` — contextual answer choices, character replies and branching story events
+- `app.js` — deck generation, scoring, rendering, story flow and result logic
 
 ## Current gameplay
 
@@ -20,15 +21,26 @@ A mobile-first relationship scenario game built with plain HTML, CSS and JavaScr
 - Regular scenarios hide persona names and emphasize relationship status
 - Rare / special files reveal the character name
 - Four player stats: LOVE / RADAR / STANDARD / CHAOS
-- Recurring-character story arcs can appear within one run
+- Contextual A / B / C answers replace the old small set of globally repeated reaction templates
+- Major and recurring scenarios can pause after a choice to show an in-character response
+- The player explicitly continues after a response instead of every question auto-skipping immediately
+- Selected turning-point scenarios have branching story events; A / B / C can produce different dialogue and consequences
 - Rare event files have a low appearance rate and are capped at one per run
 - Consistent persona portrait seed across repeated appearances
 - Immediate stat-change feedback after each choice
-- Keyboard A / B / C reaction controls
+- Keyboard A / B / C reaction controls; Enter / Space continues a response panel
 - Multiple result archetypes
 - Copyable result summary
 - 1080×1920 shareable PNG result card generated locally in the browser
 - Reduced-motion support and keyboard accessibility
+
+## Interaction design
+
+The scenario library and interaction writing are intentionally separated. `data.js` describes what happens and who it belongs to. `interactions.js` decides how the player can respond, how that persona answers back, and whether the moment becomes a story event. This keeps answer writing tied to the actual situation without making deck logic or persona data difficult to maintain.
+
+High-impact scenarios have hand-written answer sets. Remaining scenarios use persona-specific fallback responses rather than the previous global `boundary / trust / positive / social` answer sets, which significantly reduces repeated wording and keeps the response tone aligned with the same recurring person.
+
+Character responses are not shown after every question. Story-arc stages, rare files and a subset of standalone situations pause for an in-character response; lighter questions can still move forward automatically to preserve pacing.
 
 ## Persona story design
 
