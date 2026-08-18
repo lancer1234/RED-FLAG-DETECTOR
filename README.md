@@ -15,15 +15,16 @@ A mobile-first relationship scenario game built with plain HTML, CSS and JavaScr
 - QUICK SCAN: fixed 8 randomized scenarios
 - 60 standard scenarios + 6 rare files
 - Every scenario is bound to a defined persona with a consistent relationship status, communication style and behavior pattern
-- RED / GREEN flag judgement before the player's reaction choice
-- Separate flag detection accuracy score
+- Players go directly from scenario to reaction choice; there is no RED / GREEN pre-judgement step
+- Regular scenarios display the relationship status prominently instead of a character name
+- Only rare / special characters display a name
 - Four player stats: LOVE / RADAR / STANDARD / CHAOS
 - Three-stage recurring-character story arcs that can appear within one run
 - Rare event files with a low appearance rate
 - Consistent persona portrait seed across repeated appearances
 - Immediate stat-change feedback after each choice
-- Keyboard R / G judgement controls and A / B / C reaction controls
-- Multiple result archetypes including high-accuracy detection result
+- Keyboard A / B / C reaction controls
+- Multiple result archetypes
 - Copyable result summary
 - 1080×1920 shareable PNG result card generated locally in the browser
 - Reduced-motion support and keyboard accessibility
