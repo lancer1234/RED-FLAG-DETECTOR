@@ -21,9 +21,7 @@
         <span class="blink">● SIGNAL ONLINE</span>
       </div>
 
-      <div class="progress" aria-hidden="true">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+      <div class="progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
 
       <div class="stats" aria-label="玩家數值">
         <div class="stat">LOVE<div class="bar"><div class="fill" id="s0"></div></div></div>
@@ -35,6 +33,7 @@
       <div class="screen">
         <div class="portrait-wrap">
           <canvas id="portrait" class="portrait" width="224" height="154" aria-label="掃描中的像素角色"></canvas>
+          <div class="event-badge hidden" id="eventBadge"></div>
         </div>
 
         <div class="idline">
@@ -48,14 +47,22 @@
           <div class="quote" id="quote"></div>
         </div>
 
-        <div class="choices" id="choices"></div>
+        <section class="judge" id="judgePanel">
+          <div class="judge-title">FIRST INSTINCT // 這是警訊嗎？</div>
+          <div class="judge-buttons">
+            <button type="button" class="judge-btn red" data-flag="red">RED FLAG</button>
+            <button type="button" class="judge-btn green" data-flag="green">GREEN FLAG</button>
+          </div>
+        </section>
+
+        <div class="choices hidden" id="choices"></div>
         <div class="feedback hidden" id="feedback" role="status"></div>
       </div>
     </section>
 
     <footer class="foot">
       <span>RELATIONSHIP LAB</span>
-      <span>BUILD 2.0</span>
+      <span>BUILD 3.0</span>
     </footer>
   </main>
 
@@ -63,20 +70,20 @@
     <div class="terminal">
       <div class="brand terminal-brand">RED FLAG DETECTOR</div>
       <div class="sub">RELATIONSHIP OS</div>
-      <div class="bootline" id="boot">
+      <div class="bootline">
         BOOTING RELATIONSHIP OS...<br>
-        LOADING BAD DECISIONS...<br>
-        CONNECTING TO BESTIE NETWORK...
+        LOADING PEOPLE PATTERNS...<br>
+        CALIBRATING RED FLAG RADAR...
       </div>
-      <p>選擇妳真的會做的反應。系統會追蹤 LOVE、RADAR、STANDARD、CHAOS 四項數值，最後產生今晚的戀愛判定。</p>
+      <p>每題先判斷 RED / GREEN FLAG，再選擇妳真的會做的反應。題庫會大量隨機抽題，同一人物的行為會維持一致，部分局會出現連續事件與稀有檔案。</p>
 
       <div class="mode-picker" aria-label="選擇遊戲模式">
-        <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>15 題</small></button>
-        <button class="mode-btn" data-rounds="8" data-mode="QUICK SCAN">QUICK SCAN <small>8 題</small></button>
+        <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 題</small></button>
+        <button class="mode-btn" data-rounds="8" data-mode="QUICK SCAN">QUICK SCAN <small>固定 8 題</small></button>
       </div>
 
       <button class="pxbtn" id="startBtn">開始掃描 / START SCAN</button>
-      <div class="hint">可使用鍵盤 A / B / C 選擇答案</div>
+      <div class="hint">判斷階段可用 R / G；選擇階段可用 A / B / C</div>
     </div>
   </section>
 
@@ -93,6 +100,12 @@
         <div class="rbox">CHAOS<b id="r3"></b></div>
       </div>
 
+      <div class="detection-box">
+        <span>FLAG DETECTION</span>
+        <b id="detectionRate">0%</b>
+        <small id="detectionDetail"></small>
+      </div>
+
       <div class="summary-line" id="summaryLine"></div>
 
       <div class="dex">
@@ -101,10 +114,12 @@
       </div>
 
       <div class="result-actions">
+        <button class="pxbtn" id="saveCard">產生結果卡 / RESULT CARD</button>
         <button class="pxbtn" id="copyResult">複製結果 / COPY RESULT</button>
         <button class="pxbtn secondary" id="again">再掃描一次 / SCAN AGAIN</button>
       </div>
-      <div class="copy-status hidden" id="copyStatus">已複製結果</div>
+      <div class="copy-status hidden" id="copyStatus"></div>
+      <canvas id="resultCanvas" width="1080" height="1920" class="result-canvas hidden" aria-hidden="true"></canvas>
     </div>
   </section>
 
