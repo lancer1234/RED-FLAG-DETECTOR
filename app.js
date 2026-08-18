@@ -1,6 +1,7 @@
 (() => {
   const data = window.RED_FLAG_DATA || [];
   const personas = window.RED_FLAG_PERSONAS || {};
+  const interactions = window.RED_FLAG_INTERACTIONS || {};
   const labels = ['LOVE', 'RADAR', 'STANDARD', 'CHAOS'];
   const keyMap = { a: 0, b: 1, c: 2 };
 
@@ -134,12 +135,25 @@
     };
   }
 
+  function hideInteraction() {
+    $('interactionPanel').className = 'interaction-panel hidden';
+    $('interactionText').textContent = '';
+    $('storyBeat').textContent = '';
+    $('storyBeat').classList.add('hidden');
+  }
+
+  function getOptions(item) {
+    if (typeof interactions.contextualOptions === 'function') return interactions.contextualOptions(item);
+    return item.options || [];
+  }
+
   function renderRound() {
     const item = state.deck[state.index];
     if (!item) return;
     const persona = personas[item.persona] || { name: 'UNKNOWN', role: '關係未定義', profile: '' };
     const identity = displayIdentity(item, persona);
     state.locked = false;
+    hideInteraction();
 
     $('feedback').className = 'feedback hidden';
     $('feedback').textContent = '';
@@ -157,12 +171,12 @@
     const choices = $('choices');
     choices.classList.remove('hidden');
     choices.innerHTML = '';
-    item.options.forEach((choice, i) => {
+    getOptions(item).forEach((choice, i) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.choice = String(i);
       button.innerHTML = `<b>${['A','B','C'][i]}｜${choice.text}</b><small>${choice.note}</small>`;
-      button.addEventListener('click', () => choose(choice, item, button));
+      button.addEventListener('click', () => choose(choice, item, button, i));
       choices.appendChild(button);
     });
     updateProgress();
@@ -175,7 +189,48 @@
       .join(' · ');
   }
 
-  function choose(choice, item, selectedButton) {
+  function continueLabel(choiceIndex, hasStory) {
+    if (hasStory) return ['好吧，繼續看','知道了，下一段','嗯，繼續'][choiceIndex] || '繼續';
+    return ['好吧，下一題','知道了，繼續','嗯，下一題'][choiceIndex] || '下一題';
+  }
+
+  function showInteraction(item, choiceIndex) {
+    const persona = personas[item.persona] || { name: 'UNKNOWN', role: '對方' };
+    const story = typeof interactions.storyFor === 'function' ? interactions.storyFor(item, choiceIndex) : null;
+    const panel = $('interactionPanel');
+    const named = Boolean(item.rare || item.special);
+    const speaker = named ? persona.name : persona.role;
+
+    panel.className = 'interaction-panel' + (story ? ' story' : '');
+    $('interactionSpeaker').textContent = speaker;
+
+    if (story) {
+      $('interactionKicker').textContent = story.title;
+      $('interactionText').textContent = story.beats[0];
+      $('storyBeat').textContent = story.beats[1];
+      $('storyBeat').classList.remove('hidden');
+      $('continueBtn').textContent = continueLabel(choiceIndex, true);
+    } else {
+      $('interactionKicker').textContent = 'RESPONSE // 對方回覆';
+      $('interactionText').textContent = typeof interactions.characterReply === 'function'
+        ? interactions.characterReply(item, choiceIndex)
+        : '「好，我知道了。」';
+      $('storyBeat').classList.add('hidden');
+      $('continueBtn').textContent = continueLabel(choiceIndex, false);
+    }
+
+    window.setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
+  }
+
+  function advanceRound() {
+    hideInteraction();
+    state.index += 1;
+    updateProgress();
+    if (state.index >= state.deck.length) finish();
+    else renderRound();
+  }
+
+  function choose(choice, item, selectedButton, choiceIndex) {
     if (state.locked) return;
     state.locked = true;
     [...$('choices').querySelectorAll('button')].forEach(button => { button.disabled = true; });
@@ -183,15 +238,22 @@
     choice.delta.forEach((value, i) => { state.stats[i] = clamp(state.stats[i] + value); });
     if (!state.seen.includes(item.type)) state.seen.push(item.type);
     updateStats();
+
     const feedback = $('feedback');
     feedback.textContent = `${choice.note} // ${deltaSummary(choice.delta)}`;
     feedback.className = 'feedback';
     $('game').classList.add('glitch');
     window.setTimeout(() => $('game').classList.remove('glitch'), 180);
     if (navigator.vibrate) navigator.vibrate(18);
-    state.index += 1;
-    updateProgress();
-    window.setTimeout(() => { if (state.index >= state.deck.length) finish(); else renderRound(); }, 700);
+
+    const shouldReply = typeof interactions.shouldReply === 'function' && interactions.shouldReply(item);
+    const story = typeof interactions.storyFor === 'function' ? interactions.storyFor(item, choiceIndex) : null;
+    if (story || shouldReply) {
+      window.setTimeout(() => showInteraction(item, choiceIndex), 260);
+      return;
+    }
+
+    window.setTimeout(advanceRound, 680);
   }
 
   function verdict() {
@@ -266,18 +328,18 @@
       y += 165;
     });
     ctx.fillStyle = '#d2b06d'; ctx.font = '28px monospace'; wrapText(ctx, dominantTrait(), 130, y + 30, 820, 44);
-    ctx.fillStyle = '#666d6b'; ctx.font = '22px monospace'; ctx.fillText('RELATIONSHIP LAB // BUILD 3.1', 130, 1760);
+    ctx.fillStyle = '#666d6b'; ctx.font = '22px monospace'; ctx.fillText('RELATIONSHIP LAB // BUILD 3.2', 130, 1760);
     const link = document.createElement('a'); link.download = 'red-flag-detector-result.png'; link.href = canvas.toDataURL('image/png'); link.click();
     $('copyStatus').textContent = '結果卡已產生'; $('copyStatus').classList.remove('hidden'); window.setTimeout(() => $('copyStatus').classList.add('hidden'), 1600);
   }
 
   function startGame() {
     state.deck = buildDeck(state.rounds); state.index = 0; state.stats = [50, 50, 50, 50]; state.seen = []; state.locked = false;
-    updateStats(); updateProgress(); $('end').classList.add('hidden'); $('start').classList.add('hidden'); renderRound();
+    hideInteraction(); updateStats(); updateProgress(); $('end').classList.add('hidden'); $('start').classList.add('hidden'); renderRound();
   }
 
   function resetToStart() {
-    $('end').classList.add('hidden'); $('start').classList.remove('hidden'); $('copyStatus').classList.add('hidden');
+    hideInteraction(); $('end').classList.add('hidden'); $('start').classList.remove('hidden'); $('copyStatus').classList.add('hidden');
   }
 
   document.querySelectorAll('.mode-btn').forEach(button => {
@@ -291,9 +353,20 @@
   $('again').addEventListener('click', resetToStart);
   $('copyResult').addEventListener('click', copyResult);
   $('saveCard').addEventListener('click', saveResultCard);
+  $('continueBtn').addEventListener('click', advanceRound);
 
   document.addEventListener('keydown', event => {
-    if (state.locked || !$('start').classList.contains('hidden') || !$('end').classList.contains('hidden')) return;
+    if (!$('start').classList.contains('hidden') || !$('end').classList.contains('hidden')) return;
+
+    if (!$('interactionPanel').classList.contains('hidden')) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        $('continueBtn').click();
+      }
+      return;
+    }
+
+    if (state.locked) return;
     const index = keyMap[event.key.toLowerCase()];
     if (index === undefined) return;
     const button = $('choices').querySelector(`[data-choice="${index}"]`);
