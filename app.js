@@ -2,6 +2,7 @@
   const data = window.RED_FLAG_DATA || [];
   const personas = window.RED_FLAG_PERSONAS || {};
   const interactions = window.RED_FLAG_INTERACTIONS || {};
+  const flavor = window.RED_FLAG_FLAVOR || {};
   const labels = ['LOVE', 'RADAR', 'STANDARD', 'CHAOS'];
   const keyMap = { a: 0, b: 1, c: 2 };
 
@@ -10,6 +11,7 @@
     index: 0,
     stats: [50, 50, 50, 50],
     seen: [],
+    history: [],
     locked: false,
     rounds: 15,
     mode: 'FULL SCAN'
@@ -41,8 +43,8 @@
     });
     [...arcMap.values()].forEach(items => items.sort((a, b) => a.stage - b.stage));
 
-    const useArc = Math.random() < (rounds >= 15 ? .72 : .4);
-    const useRare = Math.random() < .16;
+    const useArc = Math.random() < (rounds >= 15 ? .88 : .65);
+    const useRare = Math.random() < (rounds >= 15 ? .22 : .16);
     let deck = [];
 
     if (useArc && arcMap.size) {
@@ -121,7 +123,8 @@
       badge.textContent = '⚠ RARE FILE';
       badge.className = 'event-badge';
     } else if (item.arc) {
-      badge.textContent = `CASE ${item.stage}/3`;
+      const labels = ['CASE OPENED 1/3', 'CASE CONTINUES 2/3', 'CASE FINALE 3/3'];
+      badge.textContent = labels[(item.stage || 1) - 1] || `CASE ${item.stage}/3`;
       badge.className = 'event-badge arc';
     }
   }
@@ -142,6 +145,63 @@
     $('storyBeat').classList.add('hidden');
   }
 
+  function hideRecap() {
+    $('recapPanel').classList.add('hidden');
+    $('recapTitle').textContent = '';
+    $('recapList').innerHTML = '';
+  }
+
+  function shorten(text, max = 64) {
+    const clean = String(text || '').replace(/\s+/g, ' ').trim();
+    return clean.length > max ? clean.slice(0, max - 1) + '…' : clean;
+  }
+
+  function renderRecap(item, persona) {
+    hideRecap();
+    if (!item.arc || !item.stage || item.stage <= 1) return;
+
+    const previous = state.history
+      .filter(entry => entry.arc === item.arc && entry.stage < item.stage)
+      .slice(-2);
+    if (!previous.length) return;
+
+    $('recapTitle').textContent = `${persona.role} · 這條線妳之前已經遇過 ${previous.length} 次`;
+    const list = $('recapList');
+
+    previous.forEach((entry, index) => {
+      const block = document.createElement('div');
+      block.className = 'recap-entry';
+
+      const eventLine = document.createElement('div');
+      const eventLabel = document.createElement('b');
+      eventLabel.textContent = previous.length > 1 ? `前情 ${index + 1}｜` : '上次｜';
+      eventLine.appendChild(eventLabel);
+      eventLine.appendChild(document.createTextNode(shorten(entry.quote, 72)));
+      block.appendChild(eventLine);
+
+      const choiceLine = document.createElement('div');
+      choiceLine.className = 'recap-choice';
+      choiceLine.textContent = `妳選：「${shorten(entry.choice, 45)}」`;
+      block.appendChild(choiceLine);
+
+      if (entry.response) {
+        const responseLine = document.createElement('div');
+        responseLine.className = 'recap-response';
+        responseLine.textContent = `對方：${shorten(entry.response, 62)}`;
+        block.appendChild(responseLine);
+      }
+      if (entry.consequence) {
+        const consequenceLine = document.createElement('div');
+        consequenceLine.className = 'recap-response';
+        consequenceLine.textContent = `→ ${shorten(entry.consequence, 68)}`;
+        block.appendChild(consequenceLine);
+      }
+      list.appendChild(block);
+    });
+
+    $('recapPanel').classList.remove('hidden');
+  }
+
   function getOptions(item) {
     if (typeof interactions.contextualOptions === 'function') return interactions.contextualOptions(item);
     return item.options || [];
@@ -154,11 +214,13 @@
     const identity = displayIdentity(item, persona);
     state.locked = false;
     hideInteraction();
+    renderRecap(item, persona);
 
     $('feedback').className = 'feedback hidden';
     $('feedback').textContent = '';
     $('target').textContent = 'TARGET #' + String(state.index + 1).padStart(2, '0');
     $('count').textContent = String(state.index + 1).padStart(2, '0') + ' / ' + state.deck.length;
+    $('dramaHook').textContent = typeof flavor.hookFor === 'function' ? flavor.hookFor(item) : '';
     $('role').textContent = identity.eyebrow;
     $('who').textContent = identity.main;
     $('quote').textContent = item.quote;
@@ -194,9 +256,39 @@
     return ['好吧，下一題','知道了，繼續','嗯，下一題'][choiceIndex] || '下一題';
   }
 
-  function showInteraction(item, choiceIndex) {
-    const persona = personas[item.persona] || { name: 'UNKNOWN', role: '對方' };
+  function interactionPayload(item, choiceIndex) {
+    const shouldReply = typeof interactions.shouldReply === 'function' && interactions.shouldReply(item);
     const story = typeof interactions.storyFor === 'function' ? interactions.storyFor(item, choiceIndex) : null;
+    const reply = story
+      ? story.beats[0]
+      : shouldReply && typeof interactions.characterReply === 'function'
+        ? interactions.characterReply(item, choiceIndex)
+        : '';
+    return {
+      shouldReply,
+      story,
+      reply,
+      consequence: story ? story.beats[1] : ''
+    };
+  }
+
+  function rememberChoice(item, choice, payload) {
+    state.history.push({
+      id: item.id,
+      persona: item.persona,
+      arc: item.arc || null,
+      stage: item.stage || null,
+      quote: item.quote,
+      choice: choice.text,
+      response: payload.reply,
+      consequence: payload.consequence
+    });
+  }
+
+  function showInteraction(item, choiceIndex, payload = null) {
+    const persona = personas[item.persona] || { name: 'UNKNOWN', role: '對方' };
+    const resolved = payload || interactionPayload(item, choiceIndex);
+    const story = resolved.story;
     const panel = $('interactionPanel');
     const named = Boolean(item.rare || item.special);
     const speaker = named ? persona.name : persona.role;
@@ -212,9 +304,7 @@
       $('continueBtn').textContent = continueLabel(choiceIndex, true);
     } else {
       $('interactionKicker').textContent = 'RESPONSE // 對方回覆';
-      $('interactionText').textContent = typeof interactions.characterReply === 'function'
-        ? interactions.characterReply(item, choiceIndex)
-        : '「好，我知道了。」';
+      $('interactionText').textContent = resolved.reply || '「好，我知道了。」';
       $('storyBeat').classList.add('hidden');
       $('continueBtn').textContent = continueLabel(choiceIndex, false);
     }
@@ -246,10 +336,11 @@
     window.setTimeout(() => $('game').classList.remove('glitch'), 180);
     if (navigator.vibrate) navigator.vibrate(18);
 
-    const shouldReply = typeof interactions.shouldReply === 'function' && interactions.shouldReply(item);
-    const story = typeof interactions.storyFor === 'function' ? interactions.storyFor(item, choiceIndex) : null;
-    if (story || shouldReply) {
-      window.setTimeout(() => showInteraction(item, choiceIndex), 260);
+    const payload = interactionPayload(item, choiceIndex);
+    rememberChoice(item, choice, payload);
+
+    if (payload.story || payload.shouldReply) {
+      window.setTimeout(() => showInteraction(item, choiceIndex, payload), 260);
       return;
     }
 
@@ -328,18 +419,33 @@
       y += 165;
     });
     ctx.fillStyle = '#d2b06d'; ctx.font = '28px monospace'; wrapText(ctx, dominantTrait(), 130, y + 30, 820, 44);
-    ctx.fillStyle = '#666d6b'; ctx.font = '22px monospace'; ctx.fillText('RELATIONSHIP LAB // BUILD 3.2', 130, 1760);
+    ctx.fillStyle = '#666d6b'; ctx.font = '22px monospace'; ctx.fillText('RELATIONSHIP LAB // BUILD 3.4', 130, 1760);
     const link = document.createElement('a'); link.download = 'red-flag-detector-result.png'; link.href = canvas.toDataURL('image/png'); link.click();
     $('copyStatus').textContent = '結果卡已產生'; $('copyStatus').classList.remove('hidden'); window.setTimeout(() => $('copyStatus').classList.add('hidden'), 1600);
   }
 
   function startGame() {
-    state.deck = buildDeck(state.rounds); state.index = 0; state.stats = [50, 50, 50, 50]; state.seen = []; state.locked = false;
-    hideInteraction(); updateStats(); updateProgress(); $('end').classList.add('hidden'); $('start').classList.add('hidden'); renderRound();
+    state.deck = buildDeck(state.rounds);
+    state.index = 0;
+    state.stats = [50, 50, 50, 50];
+    state.seen = [];
+    state.history = [];
+    state.locked = false;
+    hideInteraction();
+    hideRecap();
+    updateStats();
+    updateProgress();
+    $('end').classList.add('hidden');
+    $('start').classList.add('hidden');
+    renderRound();
   }
 
   function resetToStart() {
-    hideInteraction(); $('end').classList.add('hidden'); $('start').classList.remove('hidden'); $('copyStatus').classList.add('hidden');
+    hideInteraction();
+    hideRecap();
+    $('end').classList.add('hidden');
+    $('start').classList.remove('hidden');
+    $('copyStatus').classList.add('hidden');
   }
 
   document.querySelectorAll('.mode-btn').forEach(button => {
