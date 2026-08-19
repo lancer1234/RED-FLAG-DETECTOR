@@ -1,1 +1,0 @@
-BUILD 4.0 adds modifiers, traits, conditional choices, character memory, cross-event continuity, hidden endings, danger warnings, and a persistent Detected Files encyclopedia.
