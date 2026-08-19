@@ -10,7 +10,10 @@
   if(!choices)return;
 
   function currentId(){
-    const quote=String($('quote')?.textContent||'').trim();
+    const quoteNode=$('quote');
+    const tagged=quoteNode?.dataset?.scenarioId||'';
+    if(tagged)return tagged;
+    const quote=String(quoteNode?.textContent||'').trim();
     if(!quote)return'';
     const items=[...(window.RED_FLAG_DATA||[]),...(window.RED_FLAG_EVENTS||[])];
     return items.find(item=>String(item.quote||'').trim()===quote)?.id||'';
