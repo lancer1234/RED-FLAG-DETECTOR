@@ -41,7 +41,14 @@
           <span id="count">01 / 15</span>
         </div>
 
+        <section class="recap-panel hidden" id="recapPanel" aria-live="polite">
+          <div class="recap-kicker">PREVIOUSLY ON // 上回提要</div>
+          <div class="recap-title" id="recapTitle"></div>
+          <div class="recap-list" id="recapList"></div>
+        </section>
+
         <div class="dialog" id="dialog">
+          <div class="drama-hook" id="dramaHook"></div>
           <div class="role" id="role"></div>
           <div class="who" id="who"></div>
           <div class="quote" id="quote"></div>
@@ -62,7 +69,7 @@
 
     <footer class="foot">
       <span>RELATIONSHIP LAB</span>
-      <span>BUILD 3.3</span>
+      <span>BUILD 3.4</span>
     </footer>
   </main>
 
@@ -75,7 +82,7 @@
         LOADING PEOPLE PATTERNS...<br>
         CALIBRATING DECISION PROFILE...
       </div>
-      <p>直接看情境，選擇妳真的會做的反應。每一題都有對應該情境的專屬 A / B / C；不同人物也會依照自己的個性回應妳，部分關鍵選擇還會觸發額外劇情。</p>
+      <p>直接看情境，選擇妳真的會做的反應。每一題都有專屬 A / B / C；人物續篇會自動顯示上回提要，關鍵選擇還可能觸發額外劇情。</p>
 
       <div class="mode-picker" aria-label="選擇遊戲模式">
         <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 題</small></button>
@@ -120,6 +127,7 @@
   <script src="data.js"></script>
   <script src="choices.js"></script>
   <script src="interactions-v2.js"></script>
+  <script src="flavor.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
