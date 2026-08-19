@@ -16,12 +16,12 @@
     </header>
 
     <section class="os" id="game" aria-live="polite">
-      <div class="top">
-        <span id="modeLabel">FULL SCAN</span>
-        <span class="blink">● SIGNAL ONLINE</span>
-      </div>
-
+      <div class="top"><span id="modeLabel">FULL SCAN</span><span class="blink">● SIGNAL ONLINE</span></div>
       <div class="progress" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="modifier-strip hidden" id="modifierStrip">
+        <b id="modifierName"></b><span id="modifierDesc"></span>
+      </div>
 
       <div class="stats" aria-label="玩家數值">
         <div class="stat">LOVE<div class="bar"><div class="fill" id="s0"></div></div></div>
@@ -29,6 +29,8 @@
         <div class="stat">STANDARD<div class="bar"><div class="fill" id="s2"></div></div></div>
         <div class="stat">CHAOS<div class="bar"><div class="fill" id="s3"></div></div></div>
       </div>
+      <div class="system-warning hidden" id="systemWarning"></div>
+      <div class="trait-strip" id="traitStrip">TRAITS // 尚未形成明顯傾向</div>
 
       <div class="screen">
         <div class="portrait-wrap" id="portraitWrap">
@@ -36,10 +38,7 @@
           <div class="event-badge hidden" id="eventBadge"></div>
         </div>
 
-        <div class="idline">
-          <span id="target" class="target">TARGET #01</span>
-          <span id="count">01 / 15</span>
-        </div>
+        <div class="idline"><span id="target" class="target">TARGET #01</span><span id="count">01 / 15</span></div>
 
         <section class="recap-panel hidden" id="recapPanel" aria-live="polite">
           <div class="recap-kicker">PREVIOUSLY ON // 上回提要</div>
@@ -49,8 +48,10 @@
 
         <div class="dialog" id="dialog">
           <div class="drama-hook" id="dramaHook"></div>
+          <div class="cross-hook hidden" id="crossHook"></div>
           <div class="role" id="role"></div>
           <div class="who" id="who"></div>
+          <div class="relationship-state hidden" id="relationshipState"></div>
           <div class="quote" id="quote"></div>
         </div>
 
@@ -67,30 +68,22 @@
       </div>
     </section>
 
-    <footer class="foot">
-      <span>RELATIONSHIP LAB</span>
-      <span>BUILD 3.5</span>
-    </footer>
+    <footer class="foot"><span>RELATIONSHIP LAB</span><span>BUILD 4.0</span></footer>
   </main>
 
   <section class="overlay start" id="start">
     <div class="terminal">
       <div class="brand terminal-brand">RED FLAG DETECTOR</div>
       <div class="sub">RELATIONSHIP OS</div>
-      <div class="bootline">
-        BOOTING RELATIONSHIP OS...<br>
-        LOADING PEOPLE PATTERNS...<br>
-        CALIBRATING DECISION PROFILE...
-      </div>
-      <p>角色題與突發事件會一起改變 LOVE / RADAR / STANDARD / CHAOS。任何一條碰到 0 或 100，這段感情人生會立刻進入極端結局。人物續篇會自動顯示上回提要。</p>
-
+      <div class="bootline">BOOTING RELATIONSHIP OS...<br>LOADING PEOPLE PATTERNS...<br>CALIBRATING DECISION PROFILE...</div>
+      <p>角色會記得妳怎麼對他；事件會留下後果；隱藏性格會解鎖新的回答。LOVE / RADAR / STANDARD / CHAOS 任一條碰到 0 或 100，立即進入極端結局。</p>
       <div class="mode-picker" aria-label="選擇遊戲模式">
         <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 張卡</small></button>
         <button class="mode-btn" data-rounds="8" data-mode="QUICK SCAN">QUICK SCAN <small>固定 8 張卡</small></button>
       </div>
-
       <button class="pxbtn" id="startBtn">開始掃描 / START SCAN</button>
-      <div class="hint">A / B / C 選擇答案 · 任一數值 0 / 100 即結局</div>
+      <button class="pxbtn secondary" id="openDex">已偵測檔案 / DETECTED FILES</button>
+      <div class="hint">A / B / C 選擇 · 特殊選項可能解鎖 D · 0 / 100 即結局</div>
     </div>
   </section>
 
@@ -99,28 +92,30 @@
       <div class="result-title" id="resultKicker">PLAYER FILE // TONIGHT'S VERDICT</div>
       <div class="class" id="className"></div>
       <p id="classDesc"></p>
-
       <div class="rgrid">
-        <div class="rbox">LOVE<b id="r0"></b></div>
-        <div class="rbox">RADAR<b id="r1"></b></div>
-        <div class="rbox">STANDARD<b id="r2"></b></div>
-        <div class="rbox">CHAOS<b id="r3"></b></div>
+        <div class="rbox">LOVE<b id="r0"></b></div><div class="rbox">RADAR<b id="r1"></b></div>
+        <div class="rbox">STANDARD<b id="r2"></b></div><div class="rbox">CHAOS<b id="r3"></b></div>
       </div>
-
       <div class="summary-line" id="summaryLine"></div>
-
-      <div class="dex">
-        <div class="result-title">DETECTED TYPES & EVENTS</div>
-        <div id="dex"></div>
-      </div>
-
+      <div class="trait-result" id="traitResult"></div>
+      <div class="dex"><div class="result-title">DETECTED TYPES & EVENTS</div><div id="dex"></div></div>
       <div class="result-actions">
         <button class="pxbtn" id="saveCard">產生結果卡 / RESULT CARD</button>
         <button class="pxbtn" id="copyResult">複製結果 / COPY RESULT</button>
+        <button class="pxbtn secondary" id="openDexEnd">已偵測檔案 / DETECTED FILES</button>
         <button class="pxbtn secondary" id="again">再掃描一次 / SCAN AGAIN</button>
       </div>
       <div class="copy-status hidden" id="copyStatus"></div>
       <canvas id="resultCanvas" width="1080" height="1920" class="result-canvas hidden" aria-hidden="true"></canvas>
+    </div>
+  </section>
+
+  <section class="overlay hidden" id="dexOverlay">
+    <div class="terminal dex-terminal">
+      <div class="result-title">DETECTED FILES // 長期紀錄</div>
+      <p>只會記錄妳真的遇過的人物、事件與特殊檔案。資料只存在這台瀏覽器。</p>
+      <div id="dexContent" class="dex-content"></div>
+      <button class="pxbtn secondary" id="closeDex">關閉 / CLOSE</button>
     </div>
   </section>
 
@@ -129,6 +124,7 @@
   <script src="events.js"></script>
   <script src="interactions-v2.js"></script>
   <script src="flavor.js"></script>
-  <script src="app.js"></script>
+  <script src="meta.js"></script>
+  <script src="app-v2.js"></script>
 </body>
 </html>
