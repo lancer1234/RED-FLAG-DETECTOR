@@ -15,63 +15,51 @@
   let lastRoundSeen = 0;
   let processedKey = '';
 
-  const rules = {
-    DETECTIVE: /時間|時間線|前後|說法|行程|加班|消失|已讀|回覆|前任|截圖|交友軟體|限動|陌生|共同好友|朋友說|重疊|週末|謊|對不上|可疑|定位|紀錄|訊息/i,
-    BOUNDARY: /控制|報備|不准|不能|要求|逼|隱私|手機|密碼|界線|穿什麼|異性|定位|查勤|雙標|冷戰|拒絕|尊重|安全感|自由|限制/i,
-    HEART: /喜歡|想妳|想你|在意|約會|見面|告白|關係|曖昧|心動|未來|一起|認真|想跟妳|想和妳|想見|靠近/i,
-    CHAOS: /前任|喝醉|酒後|凌晨|陌生電話|三角|撞見|婚禮|交友軟體|截圖|姐妹|群組|限動|復合|巧遇|突然|修羅場|抓包|秘密/i
+  // D choices are intentionally strict: no keyword guessing and no persona fallback.
+  // If a scenario is not listed here, it does not get a D choice.
+  const exactD = {
+    'P01-01':'D｜你不想定義關係，卻要求排他？這個規則先講清楚',
+    'P01-09':'D｜先把你前後對「我們算什麼」的說法對一次',
+    'P02-08':'D｜可以有隱私，但我們把彼此手機與私人空間的界線講清楚',
+    'P04-02':'D｜關心可以，但我不接受把定位變成查勤',
+    'P04-06':'D｜你可以沒有安全感，但不能把它變成限制我的規則',
+    'P04-09':'D｜我想直接確認：你要求我的那些規則，你自己也做得到嗎？',
+    'P05-08':'D｜先把最近幾次臨時改約的時間排開看，我想知道是不是固定模式',
+    'P06-01':'D｜凌晨突然找我可以，但先說清楚你現在到底想做什麼',
+    'P06-07':'D｜先別聊回憶，我想知道你現在聯絡我的真正原因',
+    'P06-10':'D｜如果要當朋友，我們先把聯絡頻率和界線說清楚',
+    'P09-01':'D｜你有時間發限動卻一直沒回我，我想直接問這個落差',
+    'P09-07':'D｜我不猜限動暗示，你有話就直接對我說',
+    'P10-05':'D｜錢可以算清楚，但我想先確認我們對「公平」是不是同一件事',
+    'P11-03':'D｜既然還有其他約會對象，我想先把我們現在的規則講明白',
+    'P12-04':'D｜先不要再說「下次」，直接把時間和地點定下來',
+    'P13-01':'D｜表格先放旁邊，你本人對這次約會到底是什麼感覺？',
+    'P14-01':'D｜先等等，你媽媽為什麼已經知道我要來？',
+    'P14-05':'D｜先處理一件事：她是怎麼拿到我電話的？',
+    'P15-01':'D｜出生時間可以先不給，你先說這資料準備拿來做什麼',
+    'P16-01':'D｜先不要問 AI，這件事你本人到底怎麼想？',
+    'P17-01':'D｜Netflix、Costco、狗各自怎麼分，我想把這條前任線一次問清楚',
+    'P17-04':'D｜聯絡人還叫「寶」不是懶而已，我想知道你為什麼一直沒改',
+    'P18-01':'D｜先暫停面試模式：你為什麼第一次約會就需要知道收入？',
+    'P19-01':'D｜你說「沒有重疊」，那我們把實際日期一個一個排出來',
+    'P19-02':'D｜先看完整時間線，我不想只聽「技術上沒有」',
+    'P20-01':'D｜先確認一下：你跟我分手後，為什麼還一直跟我家人聯絡？'
   };
-
-  function contextText() {
-    return [
-      $('dramaHook')?.textContent,
-      $('crossHook')?.textContent,
-      $('role')?.textContent,
-      $('who')?.textContent,
-      $('quote')?.textContent
-    ].filter(Boolean).join(' ');
-  }
 
   function roundInfo() {
     const text = $('count')?.textContent || '';
     const match = text.match(/(\d+)\s*\/\s*(\d+)/);
-    return match ? { round: Number(match[1]), total: Number(match[2]) } : { round: 0, total: 15 };
+    return match ? { round: Number(match[1]), total: Number(match[2]) } : { round: 0, total: 20 };
   }
 
-  function markerType(marker) {
-    if (marker.includes('DETECTIVE')) return 'DETECTIVE';
-    if (marker.includes('BOUNDARY')) return 'BOUNDARY';
-    if (marker.includes('HEART')) return 'HEART';
-    if (marker.includes('CHAOS')) return 'CHAOS';
-    return '';
-  }
-
-  function contextualTitle(type, text) {
-    if (type === 'DETECTIVE') {
-      if (/時間|時間線|前後|行程|加班|重疊|週末|對不上/.test(text)) return 'D｜等等，前後的時間好像有哪裡對不起來';
-      if (/前任|復合/.test(text)) return 'D｜先把前任這條線問清楚，我再決定要不要信';
-      if (/截圖|交友軟體|限動|訊息|已讀/.test(text)) return 'D｜我先不下結論，但這個證據我會直接問清楚';
-      return 'D｜這裡有個細節怪怪的，我想先確認一下';
-    }
-    if (type === 'BOUNDARY') {
-      if (/隱私|手機|密碼/.test(text)) return 'D｜可以有隱私，但我們把彼此的界線講清楚';
-      if (/報備|定位|查勤/.test(text)) return 'D｜關心可以，但我不接受把報備變成查勤';
-      if (/穿什麼|不准|不能|限制|控制/.test(text)) return 'D｜你可以有感受，但不能替我決定';
-      return 'D｜這件事碰到我的界線，我現在就說清楚';
-    }
-    if (type === 'HEART') {
-      if (/告白|喜歡|在意|心動/.test(text)) return 'D｜我也有感覺，不想再繞了，直接說吧';
-      if (/約會|見面|想見/.test(text)) return 'D｜我其實想見你，那就把時間真的約下來';
-      if (/關係|曖昧|認真/.test(text)) return 'D｜我在意你，所以我想知道我們到底往哪裡走';
-      return 'D｜我不裝沒事，直接說我現在真的有感覺';
-    }
-    if (type === 'CHAOS') {
-      if (/前任|復合/.test(text)) return 'D｜好，我知道很危險，但我想看他到底要演哪齣';
-      if (/陌生電話|截圖|抓包|秘密/.test(text)) return 'D｜先別結束，我要把這齣戲看到真相出來';
-      if (/喝醉|酒後|凌晨/.test(text)) return 'D｜現在明知道不理性，但我偏想回這一句';
-      return 'D｜這局已經夠荒謬了，我想看看下一幕會怎樣';
-    }
-    return '';
+  function currentId() {
+    const quoteNode = $('quote');
+    const tagged = quoteNode?.dataset?.scenarioId || '';
+    if (tagged) return tagged;
+    const quote = String(quoteNode?.textContent || '').trim();
+    if (!quote) return '';
+    const items = [...(window.RED_FLAG_DATA || []), ...(window.RED_FLAG_EVENTS || [])];
+    return items.find(item => String(item.quote || '').trim() === quote)?.id || '';
   }
 
   function applyGuard() {
@@ -79,12 +67,7 @@
     if (!button) return;
 
     const title = button.querySelector('b');
-    const note = button.querySelector('small');
-    if (!title || !note) return;
-
-    const marker = note.textContent || '';
-    const type = markerType(marker);
-    if (!type) return;
+    if (!title) return;
 
     const { round, total } = roundInfo();
     if (round === 1 && lastRoundSeen > 1) {
@@ -94,25 +77,24 @@
     }
     lastRoundSeen = round;
 
-    const key = `${total}:${round}:${type}`;
+    const id = currentId();
+    const key = `${total}:${round}:${id}`;
     if (processedKey === key) return;
     processedKey = key;
 
-    const text = contextText();
-    const relevant = rules[type].test(text);
-    const maxPerRun = total <= 8 ? 2 : 3;
+    const exactTitle = exactD[id];
+    const maxPerRun = total >= 50 ? 6 : 3;
     const cooledDown = round - lastShownRound >= 2;
 
     observer.disconnect();
 
-    if (!relevant || shownThisRun >= maxPerRun || !cooledDown) {
+    if (!exactTitle || shownThisRun >= maxPerRun || !cooledDown) {
       button.remove();
       observer.observe(choices, { childList: true, subtree: true });
       return;
     }
 
-    const nextTitle = contextualTitle(type, text);
-    if (nextTitle && title.textContent !== nextTitle) title.textContent = nextTitle;
+    if (title.textContent !== exactTitle) title.textContent = exactTitle;
     shownThisRun += 1;
     lastShownRound = round;
 
