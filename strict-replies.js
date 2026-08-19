@@ -1,6 +1,8 @@
 (() => {
   const interactions = window.RED_FLAG_INTERACTIONS || {};
-  const exactReplyIds = new Set(['P06-08','P06-09','P06-10']);
+  const expanded = window.RED_FLAG_EXACT_REPLIES || {};
+  const legacyExact = new Set(['P06-08','P06-09','P06-10']);
+  const exactReplyIds = new Set([...legacyExact, ...Object.keys(expanded)]);
   const baseStoryFor = interactions.storyFor;
   const baseCharacterReply = interactions.characterReply;
 
@@ -21,7 +23,13 @@
 
   function characterReply(item, choiceIndex) {
     if (!item || !exactReplyIds.has(item.id)) return '';
-    return typeof baseCharacterReply === 'function' ? baseCharacterReply(item, choiceIndex) : '';
+    const rows = expanded[item.id];
+    if (Array.isArray(rows) && rows.length) {
+      return rows[Math.max(0, Math.min(Number(choiceIndex) || 0, rows.length - 1))] || '';
+    }
+    return legacyExact.has(item.id) && typeof baseCharacterReply === 'function'
+      ? baseCharacterReply(item, choiceIndex)
+      : '';
   }
 
   window.RED_FLAG_INTERACTIONS = {
