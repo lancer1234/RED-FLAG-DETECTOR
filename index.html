@@ -31,7 +31,7 @@
       </div>
 
       <div class="screen">
-        <div class="portrait-wrap">
+        <div class="portrait-wrap" id="portraitWrap">
           <canvas id="portrait" class="portrait" width="224" height="154" aria-label="掃描中的像素角色"></canvas>
           <div class="event-badge hidden" id="eventBadge"></div>
         </div>
@@ -69,7 +69,7 @@
 
     <footer class="foot">
       <span>RELATIONSHIP LAB</span>
-      <span>BUILD 3.4</span>
+      <span>BUILD 3.5</span>
     </footer>
   </main>
 
@@ -82,21 +82,21 @@
         LOADING PEOPLE PATTERNS...<br>
         CALIBRATING DECISION PROFILE...
       </div>
-      <p>直接看情境，選擇妳真的會做的反應。每一題都有專屬 A / B / C；人物續篇會自動顯示上回提要，關鍵選擇還可能觸發額外劇情。</p>
+      <p>角色題與突發事件會一起改變 LOVE / RADAR / STANDARD / CHAOS。任何一條碰到 0 或 100，這段感情人生會立刻進入極端結局。人物續篇會自動顯示上回提要。</p>
 
       <div class="mode-picker" aria-label="選擇遊戲模式">
-        <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 題</small></button>
-        <button class="mode-btn" data-rounds="8" data-mode="QUICK SCAN">QUICK SCAN <small>固定 8 題</small></button>
+        <button class="mode-btn active" data-rounds="15" data-mode="FULL SCAN">FULL SCAN <small>固定 15 張卡</small></button>
+        <button class="mode-btn" data-rounds="8" data-mode="QUICK SCAN">QUICK SCAN <small>固定 8 張卡</small></button>
       </div>
 
       <button class="pxbtn" id="startBtn">開始掃描 / START SCAN</button>
-      <div class="hint">可使用鍵盤 A / B / C 選擇答案</div>
+      <div class="hint">A / B / C 選擇答案 · 任一數值 0 / 100 即結局</div>
     </div>
   </section>
 
   <section class="overlay end hidden" id="end">
-    <div class="terminal result-terminal">
-      <div class="result-title">PLAYER FILE // TONIGHT'S VERDICT</div>
+    <div class="terminal result-terminal" id="resultTerminal">
+      <div class="result-title" id="resultKicker">PLAYER FILE // TONIGHT'S VERDICT</div>
       <div class="class" id="className"></div>
       <p id="classDesc"></p>
 
@@ -110,7 +110,7 @@
       <div class="summary-line" id="summaryLine"></div>
 
       <div class="dex">
-        <div class="result-title">DETECTED TYPES</div>
+        <div class="result-title">DETECTED TYPES & EVENTS</div>
         <div id="dex"></div>
       </div>
 
@@ -126,6 +126,7 @@
 
   <script src="data.js"></script>
   <script src="choices.js"></script>
+  <script src="events.js"></script>
   <script src="interactions-v2.js"></script>
   <script src="flavor.js"></script>
   <script src="app.js"></script>
