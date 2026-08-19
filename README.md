@@ -1,37 +1,73 @@
 # RED FLAG DETECTOR
 
-A mobile-first relationship choice game built with plain HTML, CSS and JavaScript.
+一款以手機優先設計的戀愛情境選擇遊戲，使用原生 HTML、CSS 與 JavaScript 製作，不需要額外建置流程。
 
-## Structure
+玩家會在每一局中遇到不同的人物、關係情境與突發事件，透過選擇逐步改變 LOVE、RADAR、STANDARD、CHAOS 四項數值。除了最終人格結果之外，前面的選擇也會影響角色對妳的態度、後續可使用的回答、隱藏性格與特殊結局。
 
-- `index.html` — UI structure and overlays
-- `styles.css` / `styles-v2.css` — base visual system plus replayability UI
-- `data.js` — 132 recurring-character scenarios
-- `choices.js` — dedicated choices for character scenarios
-- `events.js` — 16 systemic event cards
-- `interactions-v2.js` — character replies and branching beats
-- `flavor.js` — scenario-safe entertainment hooks
-- `meta.js` — modifiers, hidden traits, cross-event chains and secret endings
-- `app-v2.js` — deck generation, scoring, survival rules, character memory, unlocks, encyclopedia and result logic
+## 專案結構
 
-## Current gameplay
+- `index.html` — 遊戲主要介面、開始與結算畫面
+- `styles.css` / `styles-v2.css` — 基礎視覺、角色卡、事件卡與進階狀態 UI
+- `data.js` — 132 個人物情境與角色資料
+- `choices.js` — 每一個人物情境專屬的 A / B / C 回答
+- `events.js` — 16 張獨立突發事件卡
+- `interactions-v2.js` — 人物回覆、連續劇情與分支事件
+- `flavor.js` — 與題目內容對應的短標題與娛樂性文案
+- `meta.js` — 每局特殊狀態、隱藏性格、事件連鎖與秘密結局
+- `quality-guard.js` — 動態選項文案檢查與防呆
+- `app-v2.js` — 抽卡、數值、角色記憶、條件選項、收藏紀錄與結算邏輯
 
-- FULL SCAN stays fixed at 15 cards; QUICK SCAN stays fixed at 8
-- 132 character scenarios + 16 systemic event cards
-- one recurring three-stage character arc can appear in a run
-- FULL SCAN includes 2 event cards; QUICK SCAN includes 1
-- regular character cards hide names; Rare Files reveal names
-- LOVE / RADAR / STANDARD / CHAOS are Reigns-style survival meters
-- any meter reaching 0 or 100 immediately triggers one of eight extreme endings
-- surviving the full deck can trigger a normal archetype or a hidden ending
+## 基本玩法
 
-## Replayability systems
+目前提供兩種遊戲長度：
 
-### Tonight Modifier
-Each run starts with one modifier such as `姐妹就在旁邊`, `微醺模式`, `剛失戀三週`, `旅行模式`, or `諮商後遺症`. The modifier changes how strongly certain stat deltas apply for that run.
+- **FULL SCAN**：固定 15 張卡
+- **QUICK SCAN**：固定 8 張卡
 
-### Hidden traits
-Choices quietly build traits such as:
+題庫目前包含：
+
+- 132 個人物情境
+- 16 張獨立事件卡
+- 12 個會反覆登場的核心人物
+- 12 個 Rare File 特殊人物事件
+
+FULL SCAN 每局會加入 2 張事件卡，QUICK SCAN 每局加入 1 張事件卡。即使未來題庫持續增加，每局長度仍維持固定，不會因題庫變大而變得過長。
+
+一般人物卡不顯示姓名，只顯示「曖昧中」、「交往中」、「前任」等關係身分；只有 Rare File 或特殊事件才會揭露人物名字。
+
+## 四項核心數值
+
+遊戲中有四項持續變化的數值：
+
+- **LOVE** — 心動、投入與感情傾向
+- **RADAR** — 對細節、矛盾與警訊的敏感度
+- **STANDARD** — 自我界線與關係標準
+- **CHAOS** — 冒險、戲劇性與失控程度
+
+每次選擇都可能讓其中幾項上升或下降。
+
+選擇之前只會顯示大方向，例如 `LOVE ↑`、`RADAR ↓`，實際變化幅度會在選擇之後揭曉。
+
+任何一項數值到達 0 或 100，都會立刻觸發對應的極端結局；如果成功完成整局，則會進入一般人格結算或隱藏結局。
+
+## 每局特殊狀態
+
+每次開始遊戲時，系統會隨機抽出一個 **TONIGHT MODIFIER**，改變當局某些數值的波動方式。
+
+例如：
+
+- 姐妹就在旁邊
+- 微醺模式
+- 剛失戀三週
+- 旅行模式
+- 諮商後遺症
+- 普通的一晚
+
+因此即使抽到相同題目，不同一局也可能有不同風險與結果。
+
+## 隱藏性格
+
+玩家的選擇會在背景累積不同性格傾向，例如：
 
 - 容易心軟
 - 界線很硬
@@ -42,13 +78,39 @@ Choices quietly build traits such as:
 - 看行動派
 - 心動優先
 
-Traits are shown only after they become meaningful. They can also unlock a fourth `D` choice on later cards.
+當某個傾向變得明顯後，才會在遊戲介面中逐漸顯示。
 
-### Conditional choices
-High RADAR / detective traits can unlock timeline-checking answers. High STANDARD / boundary traits can unlock hard-boundary answers. Strong romantic or chaos builds can unlock corresponding special choices. The UI shows only directional impact (`LOVE ↑`, `RADAR ↓`) before choosing; exact stat changes are revealed afterward.
+這些隱藏性格不只是結算文字，也會影響後續可以使用的回答。
 
-### Character memory
-Each recurring persona now has hidden per-run `trust`, `pressure`, and `heat` values. Repeated encounters can therefore display states such as:
+## 條件解鎖回答
+
+一般題目維持專屬 A / B / C 三個回答。
+
+當玩家的數值或隱藏性格達到特定條件時，部分人物卡會額外出現 **D 選項**。
+
+例如：
+
+- RADAR 很高時，可以解鎖時間線或矛盾檢查類回答
+- STANDARD 很高時，可以解鎖更直接的界線回答
+- LOVE 很高時，可以出現更坦白的感情回答
+- CHAOS 很高時，可以選擇更冒險或更戲劇性的做法
+
+D 選項不會取代原本題目的 A / B / C，而是額外增加新的玩法路線。
+
+## 人物記憶與關係變化
+
+12 個核心人物不只是重複出現的題目來源。
+
+每個人物在單局中都有自己的隱藏狀態，包括：
+
+- 信任
+- 壓力
+- 情緒熱度
+- 相遇次數
+
+玩家前面怎麼對待這個人物，會影響後面再次見到他時的關係狀態。
+
+可能出現：
 
 - 關係正在升溫
 - 信任正在下降
@@ -56,13 +118,71 @@ Each recurring persona now has hidden per-run `trust`, `pressure`, and `heat` va
 - 情緒濃度升高
 - 熟悉感增加中
 
-This sits on top of the existing `PREVIOUSLY ON // 上回提要` recap system.
+因此同一人物在同一局的後續情境，會更像一段正在發展的故事，而不是互不相關的題目。
 
-### Cross-event continuity
-Selected systemic event cards leave flags behind. Later relevant character cards can display a `CROSS FILE` reminder, for example a dating-app screenshot, a mutual-friend warning, a group-chat 4:0 vote, an unknown caller, an ex wedding invitation, or a sudden work trip.
+## 上回提要
 
-### Hidden endings
-In addition to the eight 0 / 100 collapse endings and the normal relationship archetypes, full runs can unlock secret endings such as:
+部分人物有三段式連續劇情。
+
+當第二段或第三段隔了幾題之後再次出現，遊戲會顯示：
+
+**PREVIOUSLY ON // 上回提要**
+
+內容會記錄：
+
+- 上一次發生了什麼
+- 玩家當時選了什麼
+- 對方當時怎麼回
+- 選擇造成的劇情後果
+
+讓玩家不需要自己記住幾題之前的內容，也能立即接回人物線。
+
+## 突發事件卡
+
+除了人物卡之外，遊戲目前另有 16 張獨立事件卡。
+
+事件可能包含：
+
+- 姐妹傳來交友軟體截圖
+- 喝醉後停在送出鍵上的訊息
+- 共同好友突然說有件事想告訴妳
+- 不小心按到多年前的限動愛心
+- 前任婚禮邀請
+- 旅行訂金與臨時決定
+- 姐妹群組全票勸退
+- 家人突然問感情進度
+- 約會途中手機沒電
+- 突然需要出差
+- 陌生電話打來問感情關係
+- 生日、婚宴、前任巧遇等事件
+
+事件卡的數值影響通常比一般人物題更明顯，因此可能快速改變整局走向。
+
+## 跨事件連鎖
+
+部分事件不會在回答後立刻消失，而是會留下紀錄。
+
+例如玩家先遇到「姐妹傳來交友軟體截圖」，後面再遇到相關人物時，畫面可能出現：
+
+**CROSS FILE // 妳手機裡還留著那張截圖**
+
+目前可產生後續影響的事件包含共同好友警告、姐妹群組投票、陌生電話、前任婚禮邀請、臨時出差等。
+
+這讓不同卡片之間可以互相影響，而不是每一題都完全獨立。
+
+## 人物回覆與分支劇情
+
+部分題目在玩家選擇後不會立刻跳到下一題。
+
+人物會先根據自己的個性回覆玩家，再由玩家按下「繼續」進入下一段。
+
+關鍵事件可能進一步觸發分支劇情，不同的 A / B / C 選擇會看到不同的角色反應與後果。
+
+## 極端結局與隱藏結局
+
+四項數值各自都有低點與高點的極端結局，共 8 種。
+
+如果成功完成整局，除了原本的一般人格結果之外，也有機會依照整局行為解鎖秘密結局，例如：
 
 - 情緒平衡大師
 - 前任封鎖完成
@@ -70,24 +190,61 @@ In addition to the eight 0 / 100 collapse endings and the normal relationship ar
 - 嘴可以停，行動留下
 - 界線管理局局長
 
-### Danger warnings
-Meters near 0 or 100 now trigger explicit system warnings, not only a color change.
+部分秘密結局需要特定數值、隱藏性格或特殊選項組合才能出現。
 
-### Detected Files
-A browser-local encyclopedia remembers which recurring personas, systemic events and Rare Files the player has actually encountered. It is accessible from the start and result screens and does not require a backend.
+## 危險警示
 
-## Visual identity
+當任一數值接近 0 或 100 時，系統會顯示明確警告，而不只是改變進度條顏色。
 
-Recurring personas retain stable pixel identities across repeated appearances while differing in hairstyle, glasses, facial hair, earrings, clothing silhouettes and props. Event cards use their own system-event visual language rather than a face portrait.
+例如：
 
-## Deferred features
+`⚠ RADAR CRITICAL HIGH`
 
-The following remain intentionally deferred:
+或：
 
-- Two-player compatibility mode
-- Party / big-screen live voting mode
-- Anonymous community submission backend
+`⚠ CHAOS CRITICAL LOW`
 
-## Run
+讓玩家知道這一局已經接近極端狀態。
 
-No build step is required. Open `index.html` directly or serve the repository with any static web server.
+## DETECTED FILES 收藏系統
+
+遊戲會使用瀏覽器的 `localStorage` 記住玩家實際遇過的內容。
+
+目前收藏包含：
+
+- 核心人物
+- 突發事件
+- Rare File 特殊人物
+
+開始畫面與結算畫面都可以開啟 **DETECTED FILES** 查看目前收集進度。
+
+資料只保存在目前使用的瀏覽器，不需要帳號或後端。
+
+## 視覺設計
+
+所有核心人物都有固定的像素造型，同一人物再次出現時會維持一致外觀。
+
+不同人物之間會使用不同的：
+
+- 髮型
+- 眼鏡
+- 鬍子
+- 耳環
+- 衣服輪廓
+- 個人物件
+
+事件卡則使用完全不同的系統事件圖示，不使用人物臉孔，讓角色卡與事件卡能夠快速辨識。
+
+## 尚未加入的功能
+
+以下功能目前刻意保留在後續版本：
+
+- 雙人感情觀模式
+- PARTY / 大螢幕即時投票模式
+- 匿名投稿與主持人審核後端
+
+## 執行方式
+
+本專案不需要安裝套件或編譯。
+
+直接開啟 `index.html`，或使用任何靜態網站伺服器即可執行。
