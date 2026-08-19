@@ -16,7 +16,7 @@ https://lancer1234.github.io/RED-FLAG-DETECTOR/
 開始時可以選擇兩種長度：
 
 - **FULL SCAN**：20 張卡
-- **QUICK SCAN**：8 張卡
+- **LONG SCAN**：50 張卡
 
 每一局的內容都會重新抽取，因此重玩時可能遇到不同的情境與發展。
 
