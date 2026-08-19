@@ -131,3 +131,118 @@
 
   observer.observe(choices, { childList: true, subtree: true });
 })();
+
+// Mobile-first result card sharing. iOS Safari does not reliably honour
+// <a download> for Canvas data URLs, so use the native Share Sheet with a real
+// PNG File whenever file sharing is supported.
+(() => {
+  const $ = id => document.getElementById(id);
+  const shareButton = $('saveCard');
+  const canvas = $('resultCanvas');
+  if (!shareButton || !canvas) return;
+
+  shareButton.textContent = '分享結果卡 / SHARE CARD';
+
+  function wrap(ctx,text,x,y,maxWidth,lineHeight,maxLines=4) {
+    const chars=[...String(text||'')];
+    let line='',row=0;
+    for(let i=0;i<chars.length;i++){
+      const test=line+chars[i];
+      if(ctx.measureText(test).width>maxWidth&&line){
+        ctx.fillText(line,x,y+row*lineHeight);
+        line=chars[i];row++;
+        if(row>=maxLines-1){
+          const rest=chars.slice(i+1).join('');
+          let last=line;
+          for(const ch of rest){if(ctx.measureText(last+'…').width>maxWidth)break;last+=ch;}
+          ctx.fillText(last+'…',x,y+row*lineHeight);return;
+        }
+      }else line=test;
+    }
+    if(line)ctx.fillText(line,x,y+row*lineHeight);
+  }
+
+  function drawCard() {
+    const ctx=canvas.getContext('2d');
+    const stats=['r0','r1','r2','r3'].map(id=>Number($(id)?.textContent||0));
+    const labels=['LOVE','RADAR','STANDARD','CHAOS'];
+    const title=$('className')?.textContent||'RED FLAG DETECTOR';
+    const desc=$('classDesc')?.textContent||'';
+    const summary=$('summaryLine')?.textContent||'';
+    const traits=$('traitResult')?.textContent||'';
+
+    ctx.clearRect(0,0,1080,1920);
+    ctx.fillStyle='#07090b';ctx.fillRect(0,0,1080,1920);
+    ctx.strokeStyle='#364049';ctx.lineWidth=4;ctx.strokeRect(70,70,940,1780);
+    ctx.fillStyle='#d2b06d';ctx.font='700 54px Georgia';ctx.textAlign='center';ctx.fillText('RED FLAG DETECTOR',540,180);
+    ctx.fillStyle='#62c7c9';ctx.font='24px monospace';ctx.fillText('RELATIONSHIP OS',540,245);
+    ctx.fillStyle='#efe4cc';ctx.font='700 72px serif';ctx.fillText(title,540,380);
+    ctx.textAlign='left';ctx.fillStyle='#a9aaa1';ctx.font='30px sans-serif';wrap(ctx,desc,130,470,820,48,4);
+
+    labels.forEach((label,i)=>{
+      const y=760+i*165;
+      ctx.fillStyle='#8f9693';ctx.font='24px monospace';ctx.fillText(label,130,y);
+      ctx.fillStyle='#efe4cc';ctx.font='700 54px monospace';ctx.fillText(String(stats[i]),130,y+58);
+      ctx.strokeStyle='#263038';ctx.lineWidth=3;ctx.strokeRect(360,y+10,570,34);
+      ctx.fillStyle='#d2b06d';ctx.fillRect(360,y+10,570*Math.max(0,Math.min(100,stats[i]))/100,34);
+    });
+
+    ctx.fillStyle='#d2b06d';ctx.font='27px monospace';wrap(ctx,summary,130,1470,820,42,3);
+    ctx.fillStyle='#81bc8e';ctx.font='23px monospace';wrap(ctx,traits,130,1600,820,38,3);
+    ctx.fillStyle='#68716f';ctx.font='21px monospace';ctx.fillText('lancer1234.github.io/RED-FLAG-DETECTOR/',130,1775);
+
+    return canvas.toDataURL('image/png');
+  }
+
+  function dataUrlToBlob(dataUrl) {
+    const [header,data]=dataUrl.split(',');
+    const mime=(header.match(/data:([^;]+)/)||[])[1]||'image/png';
+    const binary=atob(data);const bytes=new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+    return new Blob([bytes],{type:mime});
+  }
+
+  function fallbackDownload(blob) {
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='red-flag-detector-result.png';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1500);
+  }
+
+  function setStatus(text) {
+    const box=$('copyStatus');if(!box)return;
+    box.textContent=text;box.classList.remove('hidden');
+    setTimeout(()=>box.classList.add('hidden'),2200);
+  }
+
+  shareButton.onclick = async () => {
+    try {
+      const dataUrl=drawCard();
+      const blob=dataUrlToBlob(dataUrl);
+      const file=new File([blob],'red-flag-detector-result.png',{type:'image/png'});
+
+      if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))) {
+        await navigator.share({
+          title:'RED FLAG DETECTOR',
+          text:`我的 RED FLAG DETECTOR 結果：${$('className')?.textContent||''}`,
+          files:[file]
+        });
+        setStatus('已開啟分享選單');
+        return;
+      }
+
+      fallbackDownload(blob);
+      setStatus('此瀏覽器不支援圖片分享，已改為下載');
+    } catch (error) {
+      if(error?.name==='AbortError') return;
+      try {
+        const blob=dataUrlToBlob(drawCard());
+        fallbackDownload(blob);
+        setStatus('分享失敗，已改為下載圖片');
+      } catch {
+        setStatus('無法建立結果圖片，請稍後再試');
+      }
+    }
+  };
+})();
