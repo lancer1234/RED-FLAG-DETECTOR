@@ -1,94 +1,88 @@
 # RED FLAG DETECTOR
 
-A mobile-first relationship scenario game built with plain HTML, CSS and JavaScript.
+A mobile-first relationship choice game built with plain HTML, CSS and JavaScript.
 
 ## Structure
 
 - `index.html` — UI structure and overlays
-- `styles.css` — visual system, responsive layout, event cards and danger states
-- `data.js` — personas and the 132 character-scenario library
-- `choices.js` — dedicated A / B / C choices for every current character scenario ID
-- `events.js` — systemic event cards with their own choices and stat effects
-- `interactions-v2.js` — in-character replies and branching story events
-- `flavor.js` — scenario-safe entertainment hooks / episode-style presentation copy
-- `app.js` — deck generation, scoring, Reigns-style survival rules, rendering, story memory, recap flow and result logic
+- `styles.css` / `styles-v2.css` — base visual system plus replayability UI
+- `data.js` — 132 recurring-character scenarios
+- `choices.js` — dedicated choices for character scenarios
+- `events.js` — 16 systemic event cards
+- `interactions-v2.js` — character replies and branching beats
+- `flavor.js` — scenario-safe entertainment hooks
+- `meta.js` — modifiers, hidden traits, cross-event chains and secret endings
+- `app-v2.js` — deck generation, scoring, survival rules, character memory, unlocks, encyclopedia and result logic
 
 ## Current gameplay
 
-- FULL SCAN: fixed 15 cards
-- QUICK SCAN: fixed 8 cards
-- 132 character scenarios: 120 standard scenarios + 12 rare files
-- 16 separate systemic event cards
-- FULL SCAN inserts 2 event cards; QUICK SCAN inserts 1 event card
-- 12 recurring core personas rather than disposable one-off characters
-- Each core persona has two separate three-stage story arcs plus standalone situations
-- Regular scenarios hide persona names and emphasize relationship status
-- Rare / special files reveal the character name
-- Four survival stats: LOVE / RADAR / STANDARD / CHAOS
-- Any stat reaching 0 or 100 immediately ends the run with one of eight extreme endings
-- Event cards intentionally create larger stat swings and can push a run toward an extreme ending
-- Every character scenario ID has its own dedicated A / B / C choice set
-- Story-arc stages and rare files can pause after a choice to show an in-character response
-- Selected turning points use branching story events, so A / B / C can produce different dialogue and consequences
-- Story continuation screens show `PREVIOUSLY ON // 上回提要` before stage 2 / 3
-- Recaps include the previous event, the player's earlier choice, the character reply and the consequence when available
-- Flavor copy never borrows a random line from another scenario: exact hooks are used when written, otherwise the scenario's own type is shown
-- FULL SCAN has an 88% chance to include one complete three-stage character arc; QUICK SCAN uses 65%
-- Rare files remain capped at one per run
-- Recurring personas keep a consistent visual identity, but the 12 personas now vary in hairstyle, glasses, facial hair, accessories, clothing and props
-- System event cards use a separate pixel-card visual language rather than a character portrait
-- Immediate stat-change feedback after each choice
-- Stats visually warn when approaching the 0 / 100 danger zone
-- Keyboard A / B / C reaction controls; Enter / Space continues a response panel
-- Normal end-of-run archetypes remain for runs that survive all cards
-- Copyable result summary and 1080×1920 shareable PNG result card
+- FULL SCAN stays fixed at 15 cards; QUICK SCAN stays fixed at 8
+- 132 character scenarios + 16 systemic event cards
+- one recurring three-stage character arc can appear in a run
+- FULL SCAN includes 2 event cards; QUICK SCAN includes 1
+- regular character cards hide names; Rare Files reveal names
+- LOVE / RADAR / STANDARD / CHAOS are Reigns-style survival meters
+- any meter reaching 0 or 100 immediately triggers one of eight extreme endings
+- surviving the full deck can trigger a normal archetype or a hidden ending
 
-## Reigns-style survival layer
+## Replayability systems
 
-The four meters are no longer only personality scores. They are survival resources. After every choice, the game checks all four values. Reaching either edge ends the run immediately.
+### Tonight Modifier
+Each run starts with one modifier such as `姐妹就在旁邊`, `微醺模式`, `剛失戀三週`, `旅行模式`, or `諮商後遺症`. The modifier changes how strongly certain stat deltas apply for that run.
 
-Extreme endings exist for:
+### Hidden traits
+Choices quietly build traits such as:
 
-- LOVE 0 / LOVE 100
-- RADAR 0 / RADAR 100
-- STANDARD 0 / STANDARD 100
-- CHAOS 0 / CHAOS 100
+- 容易心軟
+- 界線很硬
+- 細節雷達
+- 續集體質
+- 直球溝通
+- 先算了派
+- 看行動派
+- 心動優先
 
-If the player survives the full deck without touching an edge, the existing relationship archetype result system is used instead.
+Traits are shown only after they become meaningful. They can also unlock a fourth `D` choice on later cards.
 
-## Event cards
+### Conditional choices
+High RADAR / detective traits can unlock timeline-checking answers. High STANDARD / boundary traits can unlock hard-boundary answers. Strong romantic or chaos builds can unlock corresponding special choices. The UI shows only directional impact (`LOVE ↑`, `RADAR ↓`) before choosing; exact stat changes are revealed afterward.
 
-Event cards are not tied to one recurring persona. They represent outside pressure and unpredictable situations such as:
+### Character memory
+Each recurring persona now has hidden per-run `trust`, `pressure`, and `heat` values. Repeated encounters can therefore display states such as:
 
-- a friend's dating-app screenshot
-- a drunk-message draft
-- a suspicious mutual friend
-- accidentally reacting to an old story
-- an ex's wedding invitation
-- a dating-app algorithm resurfacing someone
-- travel deposits and money decisions
-- a unanimous group-chat warning
-- family pressure
-- both phones dying on a date
-- a sudden work trip
-- an unknown caller who knows the other person's name
-- birthdays, wedding +1 decisions, ranking conversations and running into an ex
+- 關係正在升溫
+- 信任正在下降
+- 對方開始退縮
+- 情緒濃度升高
+- 熟悉感增加中
 
-They use the same A / B / C controls but generally have stronger stat effects than ordinary character cards.
+This sits on top of the existing `PREVIOUSLY ON // 上回提要` recap system.
 
-## Story memory / recap
+### Cross-event continuity
+Selected systemic event cards leave flags behind. Later relevant character cards can display a `CROSS FILE` reminder, for example a dating-app screenshot, a mutual-friend warning, a group-chat 4:0 vote, an unknown caller, an ex wedding invitation, or a sudden work trip.
 
-The game stores the player's choices during the current run. When stage 2 or 3 of the same story arc appears after several unrelated cards, a recap restores context before the new situation appears.
+### Hidden endings
+In addition to the eight 0 / 100 collapse endings and the normal relationship archetypes, full runs can unlock secret endings such as:
 
-A recap can show what happened, what the player chose, what the character replied and the branch consequence. It uses relationship status rather than revealing regular persona names.
+- 情緒平衡大師
+- 前任封鎖完成
+- 本季續訂成功
+- 嘴可以停，行動留下
+- 界線管理局局長
 
-## Deck rules
+### Danger warnings
+Meters near 0 or 100 now trigger explicit system warnings, not only a color change.
 
-Session length never grows with the content library. FULL SCAN stays at 15 cards and QUICK SCAN stays at 8. One complete three-stage character arc can be inserted in order, rare files are capped at one per run, and event-card slots are reserved separately so an event never breaks a three-stage story sequence.
+### Detected Files
+A browser-local encyclopedia remembers which recurring personas, systemic events and Rare Files the player has actually encountered. It is accessible from the start and result screens and does not require a backend.
+
+## Visual identity
+
+Recurring personas retain stable pixel identities across repeated appearances while differing in hairstyle, glasses, facial hair, earrings, clothing silhouettes and props. Event cards use their own system-event visual language rather than a face portrait.
 
 ## Deferred features
 
-The following are intentionally not included yet:
+The following remain intentionally deferred:
 
 - Two-player compatibility mode
 - Party / big-screen live voting mode
