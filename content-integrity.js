@@ -51,16 +51,48 @@
     if (!validOptions(item.options)) invalid.push(item.id);
   });
 
+  const characterTotal = Object.keys(window.RED_FLAG_PERSONAS || {}).length;
+
   window.RED_FLAG_CONTENT_REPORT = {
     syncedStrictChoices: synced,
     invalidIds: [...new Set(invalid)],
-    protectedStoryArcs: Array.from({ length: 8 }, (_, i) => `P${i + 13}-B`)
+    protectedStoryArcs: Array.from({ length: 8 }, (_, i) => `P${i + 13}-B`),
+    characterTotal
   };
 
   if (invalid.length) {
     console.error('[RED FLAG DETECTOR] Invalid card content:', [...new Set(invalid)]);
   } else {
     console.info(`[RED FLAG DETECTOR] content integrity OK; synced ${synced} expansion cards into strict choices.`);
+  }
+
+  function syncCharacterTotal() {
+    const root = document.getElementById('dexContent');
+    if (!root) return;
+    root.querySelectorAll('.dex-group > b').forEach(label => {
+      const text = String(label.textContent || '').trim();
+      const match = text.match(/^CHARACTERS\s+(\d+)\s*\/\s*\d+$/i);
+      if (!match) return;
+      const next = `CHARACTERS ${match[1]}/${characterTotal}`;
+      if (label.textContent !== next) label.textContent = next;
+    });
+  }
+
+  // The encyclopedia used to hard-code the original 12-character total.
+  // Recalculate it from the live persona registry whenever the overlay opens,
+  // so future character expansions update automatically as well.
+  ['openDex', 'openDexEnd'].forEach(id => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    button.addEventListener('click', () => requestAnimationFrame(syncCharacterTotal));
+  });
+
+  const dexOverlay = document.getElementById('dexOverlay');
+  if (dexOverlay) {
+    const dexObserver = new MutationObserver(() => {
+      if (!dexOverlay.classList.contains('hidden')) requestAnimationFrame(syncCharacterTotal);
+    });
+    dexObserver.observe(dexOverlay, { attributes: true, attributeFilter: ['class'] });
   }
 
   // The UI already says FULL SCAN = 20, but app-v2 historically starts its
