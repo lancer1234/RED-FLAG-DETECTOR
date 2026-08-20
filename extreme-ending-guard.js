@@ -3,8 +3,6 @@
   const nativeSetTimeout = window.setTimeout.bind(window);
   const labels = ['LOVE','RADAR','STANDARD','CHAOS'];
 
-  // Keep the psychology layer useful: these are the same hand-calibrated
-  // scenarios used by onboarding-psych.js. D choices do not count.
   const calibrationIds = new Set([
     'P01-01','P01-09','P02-08','P04-02','P04-06','P04-09','P05-08','P06-01',
     'P06-07','P06-10','P09-01','P09-07','P10-05','P11-03','P12-04','P13-01',
@@ -119,7 +117,6 @@
     const { crisis, round, total, delta } = snapshot;
     if (!crisis) return false;
 
-    // Preserve enough room for the game and psychology layer to collect data.
     if (round < minimumRound(total)) {
       run.streakKey = '';
       run.streak = 0;
@@ -147,8 +144,6 @@
     run.streakKey = key;
     run.lastRound = round;
 
-    // Hitting 0/100 is only the warning state. It takes three consecutive
-    // outward pushes at the same extreme, after the protection window, to end.
     if (run.streak < 3) {
       setExtremeWarning(crisis, `極端持續 ${run.streak}/3`);
       return false;
@@ -162,9 +157,6 @@
     catch { return false; }
   }
 
-  // app-v2 keeps its game state private. Intercept only its one crisis-finish
-  // timeout, leaving every other timeout untouched. When an extreme ending is
-  // protected, resume the same reply/story flow instead of skipping content.
   window.setTimeout = function(fn, delay, ...args) {
     if (!isCrisisFinishCallback(fn, delay)) return nativeSetTimeout(fn, delay, ...args);
 
@@ -194,8 +186,6 @@
       const index = Number(button.dataset.choice);
       if (item && calibrationIds.has(item.id) && index >= 0 && index <= 2) run.calibrationSeen.add(item.id);
 
-      // If a later choice pulls every stat away from 0/100, the sustained
-      // extreme chain is broken.
       nativeSetTimeout(() => {
         if (!crisisFromStats()) {
           run.streakKey = '';
