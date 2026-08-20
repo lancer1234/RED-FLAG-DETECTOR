@@ -15,7 +15,6 @@
   let lastRoundSeen = 0;
   let processedKey = '';
 
-  // D choices are intentionally strict: no keyword guessing and no persona fallback.
   const exactD = {
     'P01-01':'D｜你不想定義關係，卻要求排他？這個規則先講清楚',
     'P01-09':'D｜先把你前後對「我們算什麼」的說法對一次',
@@ -108,7 +107,6 @@
   observer.observe(choices, { childList: true, subtree: true });
 })();
 
-// Strong post-choice feedback: reveal the actual score change only after the choice.
 (() => {
   const feedback = document.getElementById('feedback');
   if (!feedback) return;
@@ -162,7 +160,6 @@
   feedbackObserver.observe(feedback, { attributes:true, attributeFilter:['class'] });
 })();
 
-// Shared four-axis result visualization used by both the result screen and PNG card.
 (() => {
   const $ = id => document.getElementById(id);
   const end = $('end');
@@ -246,7 +243,6 @@
   window.RED_FLAG_DRAW_RADAR = drawRadar;
 })();
 
-// Mobile-first result card sharing with the same comparison chart.
 (() => {
   const $ = id => document.getElementById(id);
   const shareButton = $('saveCard');
