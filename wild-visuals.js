@@ -17,7 +17,6 @@
   function paintScene(ctx,id){
     const scene=sceneByPersona[id]||'date';
     const dark='#0b0d10', deep='#10161b', cyan='#62c7c9', gold='#d2b06d', red='#e05a67', white='#d7d7d7', muted='#38434a';
-    // Only paint around the character silhouette so the base portrait remains intact.
     px(ctx,30,30,54,70,deep);px(ctx,144,30,52,70,deep);
 
     if(scene==='night'||scene==='street'){
