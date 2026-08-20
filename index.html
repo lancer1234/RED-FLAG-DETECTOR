@@ -64,5 +64,17 @@
   <script src="continuity-runtime.js"></script>
   <script src="recap-source-fix.js"></script>
   <script src="drama-runtime-v2.js"></script>
+  <script>
+    (()=>{
+      const end=document.getElementById('end');
+      if(!end)return;
+      const resetResultScroll=()=>{
+        if(end.classList.contains('hidden'))return;
+        end.scrollTop=0;
+        requestAnimationFrame(()=>{end.scrollTop=0;});
+      };
+      new MutationObserver(resetResultScroll).observe(end,{attributes:true,attributeFilter:['class']});
+    })();
+  </script>
 </body>
 </html>
