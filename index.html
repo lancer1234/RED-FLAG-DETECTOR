@@ -24,7 +24,7 @@
         <div class="choices" id="choices"></div><div class="feedback hidden" id="feedback" role="status"></div>
         <section class="interaction-panel hidden" id="interactionPanel" aria-live="polite"><div class="interaction-kicker" id="interactionKicker">RESPONSE</div><div class="interaction-speaker" id="interactionSpeaker"></div><div class="interaction-text" id="interactionText"></div><div class="story-beat hidden" id="storyBeat"></div><button type="button" class="continue-btn" id="continueBtn">好吧，繼續 / CONTINUE</button></section>
       </div>
-    </section><footer class="foot"><span>RELATIONSHIP LAB</span><span>BUILD 5.4</span></footer>
+    </section><footer class="foot"><span>RELATIONSHIP LAB</span><span>BUILD 5.5</span></footer>
   </main>
   <section class="overlay start" id="start"><div class="terminal"><div class="brand terminal-brand">RED FLAG DETECTOR</div><div class="sub">RELATIONSHIP OS</div><div class="bootline">BOOTING RELATIONSHIP OS...<br>LOADING PEOPLE PATTERNS...<br>CALIBRATING DECISION PROFILE...</div><p>角色會記得妳怎麼對他；事件會留下後果；隱藏性格會解鎖新的回答。LOVE / RADAR / STANDARD / CHAOS 進入 0 或 100 時會先進入極端區，只有持續往同一方向走才可能提前結局。</p><div class="mode-picker" aria-label="選擇遊戲模式"><button class="mode-btn active" data-rounds="20" data-mode="FULL SCAN">FULL SCAN <small>固定 20 張卡</small></button><button class="mode-btn" data-rounds="50" data-mode="LONG SCAN">LONG SCAN <small>固定 50 張卡</small></button></div><button class="pxbtn" id="startBtn">開始掃描 / START SCAN</button><button class="pxbtn secondary" id="openDex">已偵測檔案 / DETECTED FILES</button><div class="hint">A / B / C 選擇 · 特殊選項可能解鎖 D · 極端值先警告，不會立即結局</div></div></section>
   <section class="overlay end hidden" id="end"><div class="terminal result-terminal" id="resultTerminal"><div class="result-title" id="resultKicker">PLAYER FILE // TONIGHT'S VERDICT</div><div class="class" id="className"></div><p id="classDesc"></p><div class="rgrid"><div class="rbox">LOVE<b id="r0"></b></div><div class="rbox">RADAR<b id="r1"></b></div><div class="rbox">STANDARD<b id="r2"></b></div><div class="rbox">CHAOS<b id="r3"></b></div></div><div class="summary-line" id="summaryLine"></div><div class="trait-result" id="traitResult"></div><div class="dex"><div class="result-title">DETECTED TYPES & EVENTS</div><div id="dex"></div></div><div class="result-actions"><button class="pxbtn" id="saveCard">產生結果卡 / RESULT CARD</button><button class="pxbtn" id="copyResult">複製結果 / COPY RESULT</button><button class="pxbtn secondary" id="openDexEnd">已偵測檔案 / DETECTED FILES</button><button class="pxbtn secondary" id="again">再掃描一次 / SCAN AGAIN</button></div><div class="copy-status hidden" id="copyStatus"></div><canvas id="resultCanvas" width="1080" height="1920" class="result-canvas hidden" aria-hidden="true"></canvas></div></section>
@@ -59,6 +59,7 @@
   <script src="wild-visuals.js"></script>
   <script src="danger-ui.js"></script>
   <script src="quality-guard.js"></script>
+  <script src="deck-calibration-guard.js"></script>
   <script src="onboarding-psych.js"></script>
   <script src="audio-system.js"></script>
   <script src="extreme-ending-guard.js"></script>
