@@ -5,6 +5,7 @@
   let pos = 0;
   let panel = null;
   let timer = null;
+  let impactPreview = false;
 
   function startVisible(){
     const start=$('start');
@@ -33,6 +34,7 @@
       type: item?.type||'--',
       audio: audio?.mode||'OFF',
       audioEnabled: audio?.enabled!==false,
+      impactPreview,
       calibration: cal.requestedMinimum ? `${cal.guaranteedMinimum||0}/${cal.requestedMinimum}` : '--',
       catalog: `${totals.characters||'?'} CHAR / ${totals.events||'?'} EVENT / ${totals.rare||'?'} RARE`,
       invalid: Array.isArray(report.invalidIds)?report.invalidIds.length:'?'
@@ -43,24 +45,37 @@
     if(!panel) return;
     const s=snapshot();
     const out=panel.querySelector('[data-dev-status]');
-    if(out) out.innerHTML=`<b>${s.build}</b><br>ROUND ${s.round}<br>CARD ${s.card} // ${s.type}<br>AUDIO ${s.audio}${s.audioEnabled?'':' // MUTED'}<br>CALIBRATION ${s.calibration}<br>CATALOG ${s.catalog}<br>INVALID CONTENT ${s.invalid}`;
+    if(out) out.innerHTML=`<b>${s.build}</b><br>ROUND ${s.round}<br>CARD ${s.card} // ${s.type}<br>AUDIO ${s.audio}${s.audioEnabled?'':' // MUTED'}<br>CHOICE IMPACT ${s.impactPreview?'VISIBLE':'HIDDEN'}<br>CALIBRATION ${s.calibration}<br>CATALOG ${s.catalog}<br>INVALID CONTENT ${s.invalid}`;
+    const impactButton=panel.querySelector('[data-dev-impact]');
+    if(impactButton){
+      impactButton.textContent=`CHOICE IMPACT ${impactPreview?'ON':'OFF'}`;
+      impactButton.classList.toggle('active',impactPreview);
+      impactButton.setAttribute('aria-pressed',impactPreview?'true':'false');
+    }
+  }
+
+  function setImpactPreview(next){
+    impactPreview=Boolean(next);
+    document.documentElement.classList.toggle('rfd-dev-show-impact',impactPreview);
+    renderStatus();
   }
 
   function makePanel(){
     if(panel) return panel;
     const style=document.createElement('style');
     style.id='rfdInternalToolsStyle';
-    style.textContent=`.rfd-it{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.rfd-it-box{width:min(620px,94vw);max-height:88vh;overflow:auto;background:#080c0f;border:1px solid #53626b;box-shadow:0 20px 80px #000;padding:18px;color:#c9d3d2}.rfd-it-head{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #29353b;padding-bottom:12px;margin-bottom:14px}.rfd-it-title{font-size:12px;letter-spacing:.12em;color:#d2b06d}.rfd-it-x,.rfd-it button{border:1px solid #35434a;background:#0d1418;color:#9fc7c6;padding:8px 10px;font:700 10px monospace;cursor:pointer}.rfd-it-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rfd-it-card{border:1px solid #273239;padding:12px;background:#0a0f12}.rfd-it-card h3{font-size:9px;color:#70888b;letter-spacing:.1em;margin:0 0 9px}.rfd-it-status{font-size:10px;line-height:1.8;word-break:break-word}.rfd-it-actions{display:flex;flex-wrap:wrap;gap:7px}.rfd-it-note{font-size:9px;line-height:1.6;color:#788584;margin-top:12px}@media(max-width:560px){.rfd-it-grid{grid-template-columns:1fr}}`;
+    style.textContent=`.rfd-it{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.rfd-it-box{width:min(620px,94vw);max-height:88vh;overflow:auto;background:#080c0f;border:1px solid #53626b;box-shadow:0 20px 80px #000;padding:18px;color:#c9d3d2}.rfd-it-head{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #29353b;padding-bottom:12px;margin-bottom:14px}.rfd-it-title{font-size:12px;letter-spacing:.12em;color:#d2b06d}.rfd-it-x,.rfd-it button{border:1px solid #35434a;background:#0d1418;color:#9fc7c6;padding:8px 10px;font:700 10px monospace;cursor:pointer}.rfd-it button.active{border-color:#d2b06d;color:#efe4cc;background:#19170f}.rfd-it-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rfd-it-card{border:1px solid #273239;padding:12px;background:#0a0f12}.rfd-it-card h3{font-size:9px;color:#70888b;letter-spacing:.1em;margin:0 0 9px}.rfd-it-status{font-size:10px;line-height:1.8;word-break:break-word}.rfd-it-actions{display:flex;flex-wrap:wrap;gap:7px}.rfd-it-note{font-size:9px;line-height:1.6;color:#788584;margin-top:12px}@media(max-width:560px){.rfd-it-grid{grid-template-columns:1fr}}`;
     document.head.appendChild(style);
 
     panel=document.createElement('div');
     panel.className='rfd-it';
     panel.setAttribute('role','dialog');
-    panel.innerHTML=`<div class="rfd-it-box"><div class="rfd-it-head"><div class="rfd-it-title">RUNTIME TUNING</div><button class="rfd-it-x" data-dev-close>×</button></div><div class="rfd-it-grid"><section class="rfd-it-card"><h3>LIVE STATUS</h3><div class="rfd-it-status" data-dev-status></div><div class="rfd-it-actions" style="margin-top:10px"><button data-dev-refresh>REFRESH</button></div></section><section class="rfd-it-card"><h3>AUDIO</h3><div class="rfd-it-actions"><button data-dev-sound>TOGGLE SOUND</button><button data-dev-silence>SILENCE</button></div><div class="rfd-it-note">Current engine values are shown in LIVE STATUS. Player-facing start/result screens remain silent.</div></section><section class="rfd-it-card"><h3>LOCAL TEST DATA</h3><div class="rfd-it-actions"><button data-dev-onboarding>RESET ONBOARDING</button><button data-dev-dex>CLEAR DEX</button></div></section><section class="rfd-it-card"><h3>REPORTS</h3><div class="rfd-it-actions"><button data-dev-copy>COPY SNAPSHOT</button><button data-dev-console>LOG REPORTS</button></div></section></div><div class="rfd-it-note">ESC closes this panel. This interface is not part of the player UI.</div></div>`;
+    panel.innerHTML=`<div class="rfd-it-box"><div class="rfd-it-head"><div class="rfd-it-title">RUNTIME TUNING</div><button class="rfd-it-x" data-dev-close>×</button></div><div class="rfd-it-grid"><section class="rfd-it-card"><h3>LIVE STATUS</h3><div class="rfd-it-status" data-dev-status></div><div class="rfd-it-actions" style="margin-top:10px"><button data-dev-refresh>REFRESH</button></div></section><section class="rfd-it-card"><h3>GAMEPLAY DEBUG</h3><div class="rfd-it-actions"><button data-dev-impact aria-pressed="false">CHOICE IMPACT OFF</button></div><div class="rfd-it-note">開啟後，本局每個選項下方會直接顯示 LOVE / RADAR / STANDARD / CHAOS 的增減值。只影響顯示，不改變計分。</div></section><section class="rfd-it-card"><h3>AUDIO</h3><div class="rfd-it-actions"><button data-dev-sound>TOGGLE SOUND</button><button data-dev-silence>SILENCE</button></div><div class="rfd-it-note">Current engine values are shown in LIVE STATUS. Player-facing start/result screens remain silent.</div></section><section class="rfd-it-card"><h3>LOCAL TEST DATA</h3><div class="rfd-it-actions"><button data-dev-onboarding>RESET ONBOARDING</button><button data-dev-dex>CLEAR DEX</button></div></section><section class="rfd-it-card"><h3>REPORTS</h3><div class="rfd-it-actions"><button data-dev-copy>COPY SNAPSHOT</button><button data-dev-console>LOG REPORTS</button></div></section></div><div class="rfd-it-note">ESC closes this panel. This interface is not part of the player UI.</div></div>`;
     document.body.appendChild(panel);
 
     panel.querySelector('[data-dev-close]').onclick=closePanel;
     panel.querySelector('[data-dev-refresh]').onclick=renderStatus;
+    panel.querySelector('[data-dev-impact]').onclick=()=>setImpactPreview(!impactPreview);
     panel.querySelector('[data-dev-sound]').onclick=()=>{const a=window.RED_FLAG_AUDIO;if(a?.setEnabled)a.setEnabled(!a.enabled);setTimeout(renderStatus,80);};
     panel.querySelector('[data-dev-silence]').onclick=()=>{window.RED_FLAG_AUDIO?.silence?.();setTimeout(renderStatus,80);};
     panel.querySelector('[data-dev-onboarding]').onclick=()=>{try{localStorage.removeItem('rfd-onboarding-v1');}catch{} renderStatus();};
@@ -85,11 +100,8 @@
   }
 
   function normalizeCode(e){
-    // KeyboardEvent.code is layout/IME independent, so B/A still work when the
-    // user is on a Traditional Chinese input method in Safari/Chrome.
     if(/^Arrow(?:Up|Down|Left|Right)$/.test(e.code)) return e.code;
     if(e.code==='KeyA'||e.code==='KeyB') return e.code;
-    // Fallback for older browsers that do not expose code reliably.
     if(/^Arrow(?:Up|Down|Left|Right)$/.test(e.key)) return e.key;
     const key=String(e.key||'').toLowerCase();
     if(key==='a') return 'KeyA';
@@ -113,7 +125,5 @@
     if(pos===seq.length){pos=0;openPanel();}
   },true);
 
-  // Non-player-facing diagnostic hook, useful from DevTools if keyboard input
-  // is intercepted by a browser extension or remote keyboard.
-  Object.defineProperty(window,'__rfdRuntimeTools',{value:Object.freeze({open:openPanel,close:closePanel}),configurable:true});
+  Object.defineProperty(window,'__rfdRuntimeTools',{value:Object.freeze({open:openPanel,close:closePanel,setImpactPreview,get impactPreview(){return impactPreview;}}),configurable:true});
 })();
