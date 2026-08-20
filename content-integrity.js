@@ -8,8 +8,6 @@
   const byId = new Map(data.map(item => [item.id, item]));
   const eventById = new Map(events.map(item => [item.id, item]));
 
-  // Protect the second half of expanded character lines from appearing as
-  // standalone cards. P13-P20 each use 04/05/06 as a three-card mini-arc.
   for (let p = 13; p <= 20; p++) {
     const persona = `P${p}`;
     [4, 5, 6].forEach((n, index) => {
@@ -20,15 +18,12 @@
     });
   }
 
-  // Keep the P17-B mini-arc self-contained.
   const p1706 = byId.get('P17-06');
   if (p1706) {
     p1706.quote = '後來他真的把 Spotify Duo 拆掉，也把前任聯絡人改回本名。那些一直用「懶得改」留下的舊設定，終於開始被整理。';
     p1706.type = '前任基礎設定終於整理型';
   }
 
-  // Faster-reading copy pass. Only presentation text changes here: IDs, choices,
-  // score deltas and story wiring stay untouched so exact replies remain valid.
   const compactQuotes = {
     'P13-01':'第一次正式約會後，他傳來 Google Sheet：「我把今天整理了一下，妳也可以幫我打分。」',
     'P13-02':'表格真的有「聊天流暢度 8.5、時間觀念 9、長期潛力 TBD」，還有一欄叫「待驗證風險」。',
