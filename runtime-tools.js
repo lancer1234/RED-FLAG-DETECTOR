@@ -1,5 +1,4 @@
 (() => {
-  // Internal runtime tools. Intentionally not linked from the player UI.
   const $ = id => document.getElementById(id);
   const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
   let pos = 0;
