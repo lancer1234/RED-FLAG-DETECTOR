@@ -3,9 +3,6 @@
   const data=window.RED_FLAG_DATA||[];
   const byQuote=new Map(data.map(item=>[String(item.quote||'').trim(),item]));
 
-  // These follow-up cards previously assumed the player picked one specific
-  // answer in the previous beat. Keep the same story event, but remove that
-  // assumption so PREVIOUSLY ON can truthfully show any A/B/C choice.
   const neutral={
     'P02-05':'過了一陣子，他主動回來說：「剛剛我語氣不好，但我還是想把問題講完。」',
     'P03-03':'當妳開始把節奏拉回自己舒服的速度，他回：「我只是對妳認真，妳為什麼一直把我推開？」',
