@@ -2,16 +2,40 @@
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = 'rfd-onboarding-v1';
   const labels = ['親密焦慮','親密迴避','界線清晰','衝動決策'];
-  const calibrationIds = new Set([
-    'P01-01','P01-02','P02-04','P02-08','P03-01','P04-01','P04-02','P05-01','P05-02',
-    'P06-01','P06-02','P06-10','P07-01','P07-02','P08-01','P08-02','P09-01','P09-02',
-    'P10-01','P10-02','P11-01','P11-02','P12-01','P12-02','P13-01','P14-01','P15-01',
-    'P16-01','P17-01','P18-01','P19-01','P20-01'
-  ]);
+
+  // Psychology-informed calibration layer.
+  // Each scenario/choice is hand-labelled. No keyword inference is used.
+  // Values are descriptive game scores, not validated clinical scale scores.
+  // Order: [anxiety, avoidance, boundary, impulsivity]
+  const calibration = {
+    'P01-01': [[72,24,78,32],[55,20,86,24],[34,45,38,64]],
+    'P01-09': [[68,22,80,30],[52,18,84,22],[38,44,42,60]],
+    'P02-08': [[46,26,84,20],[35,42,72,20],[66,18,44,54]],
+    'P04-02': [[70,18,82,26],[48,20,88,20],[30,48,42,56]],
+    'P04-06': [[62,20,88,22],[45,24,84,18],[28,52,38,60]],
+    'P04-09': [[64,18,90,20],[46,22,86,18],[30,48,40,58]],
+    'P05-08': [[58,24,76,24],[42,30,82,18],[32,46,40,60]],
+    'P06-01': [[70,18,74,40],[48,30,82,24],[34,44,38,68]],
+    'P06-07': [[72,18,78,38],[50,28,84,24],[30,46,36,72]],
+    'P06-10': [[50,20,88,18],[34,40,80,20],[62,24,44,58]],
+    'P09-01': [[66,20,72,28],[44,28,78,20],[30,48,42,56]],
+    'P09-07': [[58,18,82,24],[40,34,76,18],[32,42,44,60]],
+    'P10-05': [[46,22,86,18],[38,28,82,20],[54,24,46,50]],
+    'P11-03': [[60,18,88,22],[44,26,84,18],[34,42,40,62]],
+    'P12-04': [[54,18,82,28],[40,30,78,20],[30,46,42,64]],
+    'P13-01': [[42,20,76,28],[34,30,80,18],[28,40,44,66]],
+    'P14-01': [[50,24,84,24],[40,28,88,18],[30,44,42,58]],
+    'P15-01': [[48,22,84,22],[38,30,80,18],[28,46,40,64]],
+    'P16-01': [[44,18,82,20],[34,28,86,18],[28,42,44,60]],
+    'P17-01': [[60,20,84,26],[46,24,88,20],[30,46,38,66]],
+    'P17-04': [[58,18,86,22],[42,26,82,18],[30,48,36,64]],
+    'P18-01': [[44,24,88,18],[36,30,84,18],[26,44,42,62]],
+    'P19-01': [[64,18,82,26],[56,20,86,22],[30,44,38,66]],
+    'P20-01': [[52,22,88,22],[42,28,92,18],[28,46,40,62]]
+  };
 
   const psych = { sums:[0,0,0,0], samples:0, used:new Set() };
 
-  function clamp(v){ return Math.max(0, Math.min(100, v)); }
   function currentItem(){
     const quote = $('quote');
     const tagged = quote?.dataset?.scenarioId || '';
@@ -19,25 +43,6 @@
     if (tagged) return items.find(item => item.id === tagged) || null;
     const text = String(quote?.textContent || '').trim();
     return items.find(item => String(item.quote || '').trim() === text) || null;
-  }
-
-  function scoreChoice(choice){
-    const text = `${choice?.text || ''} ${choice?.note || ''}`;
-    const delta = Array.isArray(choice?.delta) ? choice.delta : [0,0,0,0];
-
-    let anxiety = 50;
-    if (/安全感|在意|吃醋|到底算什麼|關係|為什麼不回|追問|查|定位|報備|前任|確認他|確認她/.test(text)) anxiety += 20;
-    if (/不腦補|不過度解讀|給空間|不用等|不追|先看行動|先觀察|不急/.test(text)) anxiety -= 20;
-    if (/直接問|講清楚|說清楚|確認規則/.test(text)) anxiety += 5;
-
-    let avoidance = 50;
-    if (/算了|不回|不談|不想講|先不要|保持距離|離開|封鎖|不見|不聯絡|退回去/.test(text)) avoidance += 25;
-    if (/直接|講清楚|說清楚|溝通|問清楚|把話說完|確認/.test(text)) avoidance -= 20;
-    if (/改天|之後再說|等看看/.test(text)) avoidance += 10;
-
-    const boundary = clamp(50 + (Number(delta[2]) || 0) * 4.2);
-    const impulsive = clamp(50 + (Number(delta[3]) || 0) * 4.2);
-    return [clamp(anxiety), clamp(avoidance), boundary, impulsive];
   }
 
   function resetPsych(){
@@ -49,14 +54,11 @@
 
   function recordChoice(button){
     const item = currentItem();
-    if (!item || !calibrationIds.has(item.id) || psych.used.has(item.id)) return;
+    const matrix = item ? calibration[item.id] : null;
+    if (!item || !matrix || psych.used.has(item.id)) return;
     const index = Number(button?.dataset?.choice);
-    if (!Number.isInteger(index) || index < 0 || index > 2) return;
-    const choices = window.RED_FLAG_FULL_CHOICES?.[item.id] || item.options || [];
-    const choice = choices[index];
-    if (!choice) return;
-    const values = scoreChoice(choice);
-    values.forEach((v,i) => psych.sums[i] += v);
+    if (!Number.isInteger(index) || index < 0 || index > 2 || !matrix[index]) return;
+    matrix[index].forEach((v,i) => psych.sums[i] += v);
     psych.samples += 1;
     psych.used.add(item.id);
   }
@@ -98,7 +100,7 @@
       <div class="psych-kicker">RELATIONSHIP PATTERN // 關係傾向</div>
       <div class="psych-meta">參考度：${confidence()} · 本局校準情境 ${psych.samples} 題</div>
       ${rows}
-      <p>這是依本局情境選擇整理出的心理學參考傾向，用來幫助自我觀察，不是心理診斷或正式量表分數。</p>`;
+      <p>依本局部分日常關係情境的選擇整理，用來幫助自我觀察。這不是心理診斷，也不是正式心理量表分數。</p>`;
   }
 
   function installStyles(){
