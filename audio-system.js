@@ -16,14 +16,13 @@
   let nextStepAt = 0;
   let syncQueued = false;
   let noiseBuffer = null;
+  let transitionToken = 0;
 
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) enabled = stored !== '0';
   } catch {}
 
-  // Keep EVENT cards out of the normal character pool. app-v2 still inserts only
-  // its dedicated EVENT slots; this only makes that small candidate pool balanced.
   function normalizeEventDensity(){
     const data = window.RED_FLAG_DATA || [];
     const events = window.RED_FLAG_EVENTS || [];
@@ -56,7 +55,8 @@
     if(ctx) return true;
     const AC=window.AudioContext||window.webkitAudioContext;
     if(!AC) return false;
-    ctx=new AC({latencyHint:'interactive'});
+    try { ctx=new AC({latencyHint:'interactive'}); }
+    catch { ctx=new AC(); }
     master=ctx.createGain();
     master.gain.value=0;
     master.connect(ctx.destination);
@@ -108,7 +108,6 @@
 
     const leadAmp=mode==='danger'?.061:mode==='wtf'?.057:.063;
     tone(midi(notes[eighth]+12),at,beat*.34,leadAmp,'square',eighth%2?.14:-.14);
-
     if(eighth%2===0) chord.forEach((n,i)=>tone(midi(n+12),at,beat*.28,mode==='danger'?.011:.016,'square',[-.28,0,.28][i]));
 
     let bassNote=root;
@@ -143,14 +142,15 @@
 
   function startScheduler(){
     if(!ctx||timer) return;
-    nextStepAt=ctx.currentTime+.035;
-    timer=setInterval(scheduler,120);
+    nextStepAt=ctx.currentTime+.018;
+    timer=setInterval(scheduler,100);
     scheduler();
   }
 
   function stopScheduler(){if(timer){clearInterval(timer);timer=null;}}
 
-  function silence(fade=.22){
+  function silence(fade=.16){
+    transitionToken++;
     stopScheduler();mode='';step=0;
     if(!ctx||!master) return;
     const now=ctx.currentTime;
@@ -159,8 +159,12 @@
 
   function currentCardMode(){
     if(!activeGame()) return '';
-    const role=String($('role')?.textContent||''),badge=String($('eventBadge')?.textContent||''),dialog=$('dialog');
-    if(/DANGER FILE/i.test(role)||/DANGER FILE/i.test(badge)||dialog?.classList.contains('danger-dialog')) return 'danger';
+    // Use authoritative card text/badge only. Do NOT use danger-dialog here:
+    // that class can survive one animation frame after a DANGER card and was
+    // causing the old danger track to linger into the next normal card.
+    const role=String($('role')?.textContent||'');
+    const badge=String($('eventBadge')?.textContent||'');
+    if(/DANGER FILE/i.test(role)||/DANGER FILE/i.test(badge)) return 'danger';
     if(/WTF/i.test(role)||/WTF/i.test(badge)||/RARE FILE|BOSS|CASE FINALE/i.test(badge)) return 'wtf';
     return 'normal';
   }
@@ -172,15 +176,21 @@
     try{if(ctx.state==='suspended') await ctx.resume();}catch{}
     if(mode===next&&timer) return;
 
+    const token=++transitionToken;
     const now=ctx.currentTime;
-    master.gain.cancelScheduledValues(now);master.gain.setValueAtTime(master.gain.value,now);master.gain.linearRampToValueAtTime(0,now+.16);
-    stopScheduler();mode=next;step=0;nextStepAt=now+.18;
+    master.gain.cancelScheduledValues(now);
+    master.gain.setValueAtTime(master.gain.value,now);
+    master.gain.linearRampToValueAtTime(0,now+.045);
+    stopScheduler();mode=next;step=0;nextStepAt=now+.055;
+
     setTimeout(()=>{
-      if(!ctx||!activeGame()||!enabled||mode!==next) return;
+      if(token!==transitionToken||!ctx||!activeGame()||!enabled||mode!==next) return;
       const t=ctx.currentTime;
-      master.gain.cancelScheduledValues(t);master.gain.setValueAtTime(master.gain.value,t);master.gain.linearRampToValueAtTime(LEVELS[next]||LEVELS.normal,t+.24);
+      master.gain.cancelScheduledValues(t);
+      master.gain.setValueAtTime(master.gain.value,t);
+      master.gain.linearRampToValueAtTime(LEVELS[next]||LEVELS.normal,t+.085);
       startScheduler();
-    },170);
+    },50);
   }
 
   function queueSync(){
@@ -201,7 +211,7 @@
     enabled=Boolean(next);
     try{localStorage.setItem(STORAGE_KEY,enabled?'1':'0');}catch{}
     renderToggle();
-    if(enabled) unlock(); else silence(.18);
+    if(enabled) unlock(); else silence(.12);
   }
 
   function renderToggle(){
@@ -226,7 +236,7 @@
     const observeText=node=>node&&new MutationObserver(queueSync).observe(node,{childList:true,characterData:true,subtree:true});
     observeText($('role'));observeText($('eventBadge'));observeText($('quote'));
     const classObserver=new MutationObserver(queueSync);
-    [$('end'),$('start'),$('dialog'),$('eventBadge')].filter(Boolean).forEach(node=>classObserver.observe(node,{attributes:true,attributeFilter:['class']}));
+    [$('end'),$('start'),$('eventBadge')].filter(Boolean).forEach(node=>classObserver.observe(node,{attributes:true,attributeFilter:['class']}));
   }
 
   function installSfx(){
@@ -241,6 +251,7 @@
   $('startBtn')?.addEventListener('click',unlock,true);
   $('soundToggle')?.addEventListener('click',()=>{if(enabled)unlock();},true);
   $('again')?.addEventListener('click',()=>setTimeout(queueSync,0),true);
+  $('continueBtn')?.addEventListener('click',()=>setTimeout(queueSync,0),true);
 
   document.addEventListener('visibilitychange',()=>{
     if(!ctx) return;
