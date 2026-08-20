@@ -33,25 +33,24 @@ button{font:inherit}button:focus-visible{outline:2px solid var(--cyan);outline-o
 .hidden{display:none!important}.glitch{animation:glitch .14s steps(2,end) 3}@keyframes glitch{0%{transform:translate(2px,0)}50%{transform:translate(-2px,1px);filter:hue-rotate(30deg)}100%{transform:none}}
 @media(max-width:430px) and (max-height:900px){
   html,body{height:100%;overflow:hidden}
-  .wrap{height:100dvh;min-height:100dvh;padding:max(4px,env(safe-area-inset-top)) 8px max(4px,env(safe-area-inset-bottom));overflow:hidden}
-  .brand-block{margin-bottom:4px;flex:0 0 auto}
-  .brand{font-size:17px;line-height:1.05}.sub{font-size:8px;margin-top:1px}
-  .os{flex:1;min-height:0;display:flex;flex-direction:column}
-  .top{padding:6px 8px;font-size:9px;flex:0 0 auto}
-  .progress{flex:0 0 3px}
-  .stats{padding:6px 7px;gap:5px;flex:0 0 auto}.stat{font-size:9px}.bar{height:5px;margin-top:3px}
-  .screen{padding:6px 8px 8px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}
-  .screen::-webkit-scrollbar{display:none}
-  .portrait-wrap{padding:4px;text-align:center}.portrait{width:auto;height:126px;max-width:100%;margin:0 auto;aspect-ratio:auto}
-  .portrait-wrap::after{right:6px;top:6px;font-size:8px}.event-badge{left:7px;top:7px;padding:4px 6px;font-size:8px}
-  .idline{margin-top:5px;font-size:9px}
-  .dialog{margin:6px 0;padding:8px 9px;min-height:0}.drama-hook{font-size:9px;margin-bottom:4px;padding-bottom:4px}.role{font-size:10px;margin-bottom:4px}.who{font-size:18px;margin-bottom:5px;line-height:1.2}.quote{font-size:16px;line-height:1.45}
-  .choices{gap:5px}.choices button{padding:8px 9px;min-height:47px}.choices b{font-size:13px;line-height:1.3}.choices small{font-size:10px;line-height:1.25;margin-top:2px}
-  .feedback{margin-top:5px;padding:7px 8px;min-height:32px;font-size:10px}
-  .interaction-panel{margin-top:6px;padding:9px 10px}.interaction-kicker{margin-bottom:5px}.interaction-speaker{margin-bottom:4px}.interaction-text{font-size:16px;line-height:1.5}.story-beat{margin-top:6px;padding:7px 8px;font-size:11px;line-height:1.5}.continue-btn{margin-top:7px;padding:9px 8px}
-  .recap-panel{margin-top:6px;padding:8px 9px}.recap-kicker{font-size:9px;margin-bottom:4px}.recap-title{font-size:14px;margin-bottom:5px}.recap-list{gap:4px}.recap-entry{font-size:10px;line-height:1.45}
+  .wrap{height:100dvh;min-height:100dvh;padding:max(5px,env(safe-area-inset-top)) 9px max(5px,env(safe-area-inset-bottom));overflow:hidden}
+  .brand-block{margin-bottom:6px;flex:0 0 auto}.brand{font-size:20px;line-height:1.1}.sub{font-size:9px;margin-top:2px}
+  .os{flex:1;min-height:0;display:flex;flex-direction:column}.top{padding:8px 9px;font-size:10px;flex:0 0 auto}.progress{flex:0 0 3px}
+  .stats{padding:8px 8px;gap:6px;flex:0 0 auto}.stat{font-size:9px}.bar{height:6px;margin-top:4px}
+  .screen{padding:8px 9px 10px;flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none}.screen::-webkit-scrollbar{display:none}
+  .portrait-wrap{padding:5px;text-align:center}.portrait{width:auto;height:166px;max-width:100%;margin:0 auto;aspect-ratio:auto}.portrait-wrap::after{right:7px;top:7px;font-size:9px}.event-badge{left:8px;top:8px;padding:5px 7px;font-size:9px}
+  .idline{margin-top:7px;font-size:10px}.dialog{margin:8px 0;padding:11px 11px;min-height:0}.drama-hook{font-size:10px;margin-bottom:6px;padding-bottom:5px}.role{font-size:11px;margin-bottom:5px}.who{font-size:20px;margin-bottom:7px;line-height:1.25}.quote{font-size:17px;line-height:1.52}
+  .choices{gap:6px}.choices button{padding:10px 10px;min-height:52px}.choices b{font-size:13.5px;line-height:1.35}.choices small{font-size:10.5px;line-height:1.3;margin-top:3px}.feedback{margin-top:6px;padding:8px 9px;min-height:34px;font-size:10.5px}
   .foot{display:none}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .portrait{height:126px}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .screen{padding-top:6px}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .dialog{margin:6px 0;padding:8px 9px}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .who{font-size:18px;margin-bottom:5px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .quote{font-size:16px;line-height:1.45}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .choices{gap:5px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .choices button{padding:8px 9px;min-height:47px}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .recap-panel{margin-top:6px;padding:8px 9px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .recap-kicker{font-size:9px;margin-bottom:4px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .recap-title{font-size:14px;margin-bottom:5px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .recap-list{gap:4px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .recap-entry{font-size:10px;line-height:1.45}
+  .os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .interaction-panel{margin-top:6px;padding:9px 10px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .interaction-kicker{margin-bottom:5px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .interaction-speaker{margin-bottom:4px}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .interaction-text{font-size:16px;line-height:1.5}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .story-beat{margin-top:6px;padding:7px 8px;font-size:11px;line-height:1.5}.os:has(.recap-panel:not(.hidden),.interaction-panel:not(.hidden)) .continue-btn{margin-top:7px;padding:9px 8px}
+  .os:has(.choices button:nth-child(4)) .portrait{height:142px}.os:has(.choices button:nth-child(4)) .dialog{margin:7px 0;padding:9px 10px}.os:has(.choices button:nth-child(4)) .choices{gap:5px}.os:has(.choices button:nth-child(4)) .choices button{padding:8px 9px;min-height:48px}
 }
 @media(max-width:360px){.brand{font-size:20px}.who{font-size:21px}.quote{font-size:18px}.interaction-text{font-size:17px}.recap-title{font-size:15px}.stats{gap:4px}.stat{font-size:8px}.choices b{font-size:13px}.choices small{font-size:10px}}
-@media(max-width:360px) and (max-height:900px){.brand{font-size:16px}.who{font-size:17px}.quote{font-size:15px}.interaction-text{font-size:15px}.recap-title{font-size:13px}}
+@media(max-width:360px) and (max-height:900px){.brand{font-size:18px}.portrait{height:150px}.who{font-size:19px}.quote{font-size:16px}.interaction-text{font-size:15px}.recap-title{font-size:13px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
