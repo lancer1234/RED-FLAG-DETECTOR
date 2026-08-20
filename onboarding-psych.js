@@ -104,7 +104,24 @@
     const style = document.createElement('style');
     style.id = 'onboardingPsychStyles';
     style.textContent = `
-      .tutorial-overlay{z-index:35}.tutorial-terminal{width:min(92vw,390px);min-height:330px;display:flex;flex-direction:column;justify-content:space-between}.tutorial-step{font-size:8px;color:#62c7c9;letter-spacing:.14em;margin-bottom:18px}.tutorial-title{font-family:"Noto Serif TC","Songti TC",serif;font-size:28px;line-height:1.3;color:#d2b06d;margin-bottom:18px}.tutorial-copy{font-family:"Noto Serif TC","Songti TC",serif;font-size:17px;line-height:1.75;color:#efe4cc;white-space:pre-line}.tutorial-copy strong{color:#62c7c9}.tutorial-actions{margin-top:24px}.tutorial-skip{margin-top:8px;text-align:center;color:#68716f;font-size:8px;cursor:pointer}.howto-btn{margin-top:8px}.first-choice-hint{margin:8px 0 0;text-align:center;color:#7f8b89;font-size:8px;animation:hintPulse 1.4s ease-in-out infinite}.psych-result{margin-top:12px;border:1px solid #303b42;background:#0a1014;padding:11px 10px}.psych-kicker{color:#62c7c9;font-size:9px;letter-spacing:.12em}.psych-meta{margin:6px 0 10px;color:#8f9693;font-size:8px}.psych-row{display:grid;grid-template-columns:64px 1fr 30px;align-items:center;gap:7px;margin:7px 0;font-size:8px;color:#aab1ae}.psych-track{height:7px;border:1px solid #2f3a40;background:#11171c;overflow:hidden}.psych-track i{display:block;height:100%;background:linear-gradient(90deg,#62c7c9,#d2b06d)}.psych-row b{text-align:right;color:#efe4cc;font-size:10px}.psych-result p{margin:10px 0 0;color:#6f7976;font-size:7px;line-height:1.6}@keyframes hintPulse{50%{opacity:.5}}@media(max-width:360px){.tutorial-title{font-size:24px}.tutorial-copy{font-size:16px}.psych-row{grid-template-columns:58px 1fr 28px}}
+      .tutorial-overlay{z-index:35;background:rgba(6,8,10,.94)}
+      .tutorial-terminal{width:min(92vw,390px);min-height:330px;display:flex;flex-direction:column;justify-content:space-between;background:#f1ede3;border-color:#b7ab93;box-shadow:0 0 0 4px #030405,0 18px 50px rgba(0,0,0,.45);color:#171a1d}
+      .tutorial-step{font-size:11px;color:#227f86;letter-spacing:.14em;margin-bottom:18px;font-weight:700}
+      .tutorial-title{font-family:"Noto Serif TC","Songti TC",serif;font-size:29px;line-height:1.3;color:#8a6727;margin-bottom:18px}
+      .tutorial-copy{font-family:"Noto Serif TC","Songti TC",serif;font-size:18px;line-height:1.78;color:#24282b;white-space:pre-line}
+      .tutorial-copy strong{color:#176d73}
+      .tutorial-actions{margin-top:24px}.tutorial-actions .pxbtn{background:#171a1d;color:#f1ede3;border-color:#8a6727}
+      .tutorial-skip{margin-top:10px;text-align:center;color:#65615a;font-size:11px;cursor:pointer}
+      .howto-btn{margin-top:8px}.first-choice-hint{margin:9px 0 0;text-align:center;color:#96a29f;font-size:11px;line-height:1.5;animation:hintPulse 1.4s ease-in-out infinite}
+      .psych-result{margin-top:14px;border:1px solid #c7bda8;background:#f1ede3;padding:14px 13px;color:#202326}
+      .psych-kicker{color:#176d73;font-size:12px;letter-spacing:.1em;font-weight:700}
+      .psych-meta{margin:7px 0 12px;color:#6a665f;font-size:11px;line-height:1.5}
+      .psych-row{display:grid;grid-template-columns:72px 1fr 34px;align-items:center;gap:8px;margin:10px 0;font-size:12px;color:#303437}
+      .psych-track{height:9px;border:1px solid #aaa08e;background:#ddd6c9;overflow:hidden}.psych-track i{display:block;height:100%;background:linear-gradient(90deg,#62c7c9,#d2b06d)}
+      .psych-row b{text-align:right;color:#171a1d;font-size:13px}
+      .psych-result p{margin:12px 0 0;color:#69645c;font-size:11px;line-height:1.65}
+      @keyframes hintPulse{50%{opacity:.5}}
+      @media(max-width:360px){.tutorial-title{font-size:26px}.tutorial-copy{font-size:17px}.tutorial-step,.tutorial-skip{font-size:10px}.psych-row{grid-template-columns:68px 1fr 30px;font-size:11px}.psych-result p{font-size:10px}}
     `;
     document.head.appendChild(style);
   }
