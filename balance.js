@@ -45,26 +45,22 @@
   const rows = allChoices();
   const before = audit(rows);
 
-  // Choice semantics are more important than a mathematically symmetrical pool.
-  // Healthy communication/trust/balanced choices should be able to build LOVE,
-  // and merely being mature should not automatically drain CHAOS every round.
-  // These signatures correspond to the shared choice templates in choices.js.
   const semanticPresets = new Map([
-    ['-3,8,12,-3',[-1,6,9,-2]],   // boundary
-    ['1,9,6,-1',[2,7,5,0]],       // verify
-    ['7,-6,-6,7',[5,-4,-4,4]],    // soften / accommodate
-    ['3,6,8,-3',[5,5,7,0]],       // communicate
-    ['1,7,4,-1',[2,6,4,0]],       // observe
-    ['2,-5,-5,5',[2,-4,-4,4]],    // avoid
-    ['7,1,4,-3',[7,1,4,0]],        // trust
-    ['3,5,4,-1',[5,4,4,0]],        // balanced
-    ['-1,7,2,2',[0,7,2,2]],        // radar
-    ['-6,11,12,-5',[-6,10,11,-4]], // exit
-    ['9,-7,-7,8',[8,-6,-6,7]],     // chance
-    ['8,1,3,-1',[8,1,3,1]],        // love
-    ['9,-5,-5,12',[8,-5,-5,10]],   // chaos
-    ['1,7,8,-3',[3,6,7,-1]],       // pace
-    ['1,7,9,-2',[3,6,8,-1]]        // money
+    ['-3,8,12,-3',[-1,6,9,-2]],
+    ['1,9,6,-1',[2,7,5,0]],
+    ['7,-6,-6,7',[5,-4,-4,4]],
+    ['3,6,8,-3',[5,5,7,0]],
+    ['1,7,4,-1',[2,6,4,0]],
+    ['2,-5,-5,5',[2,-4,-4,4]],
+    ['7,1,4,-3',[7,1,4,0]],
+    ['3,5,4,-1',[5,4,4,0]],
+    ['-1,7,2,2',[0,7,2,2]],
+    ['-6,11,12,-5',[-6,10,11,-4]],
+    ['9,-7,-7,8',[8,-6,-6,7]],
+    ['8,1,3,-1',[8,1,3,1]],
+    ['9,-5,-5,12',[8,-5,-5,10]],
+    ['1,7,8,-3',[3,6,7,-1]],
+    ['1,7,9,-2',[3,6,8,-1]]
   ]);
 
   let semanticAdjusted = 0;
@@ -79,7 +75,6 @@
 
   const semantic = audit(rows);
 
-  // Reduce volatility so ordinary 20/50-card runs can still reach the end.
   rows.forEach(({choice,kind}) => {
     const factor = kind === 'event' ? 0.78 : 0.72;
     const cap = kind === 'event' ? 9 : 8;
@@ -90,8 +85,6 @@
     });
   });
 
-  // Whole-library correction is intentionally gentle now. The previous wider
-  // 0.68–1.32 correction could undo semantic tuning just to make totals look even.
   const scaled = audit(rows);
   const directionFactors = scaled.map(stat => {
     if (!stat.positiveSum || !stat.negativeSum) return {positive:1,negative:1};
@@ -109,7 +102,6 @@
     });
   });
 
-  // Keep the four meters similarly active without forcing them to be identical.
   const directional = audit(rows);
   const activity = directional.map(stat => stat.positiveSum + stat.negativeSum);
   const targetActivity = activity.reduce((a,b)=>a+b,0) / Math.max(1,activity.length);
@@ -123,7 +115,6 @@
     });
   });
 
-  // TONIGHT MODIFIER changes flavour, not the fundamental meaning of a choice.
   (window.RED_FLAG_META?.modifiers || []).forEach(modifier => {
     if (!Array.isArray(modifier.mult)) return;
     modifier.mult = modifier.mult.map(value => {
