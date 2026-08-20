@@ -1,7 +1,10 @@
 (() => {
   const $=id=>document.getElementById(id);
   const data=window.RED_FLAG_DATA||[];
-  const byQuote=new Map(data.map(item=>[String(item.quote||'').trim(),item]));
+  const events=window.RED_FLAG_EVENTS||[];
+  const items=[...data,...events];
+  const byQuote=new Map(items.map(item=>[String(item.quote||'').trim(),item]));
+  const byId=new Map(items.map(item=>[item.id,item]));
 
   const neutral={
     'P02-05':'過了一陣子，他主動回來說：「剛剛我語氣不好，但我還是想把問題講完。」',
@@ -24,6 +27,7 @@
   };
 
   let lastKey='';
+
   function currentItem(){
     const q=$('quote');
     if(!q)return null;
@@ -32,26 +36,35 @@
     if(direct){
       q.dataset.scenarioId=direct.id;
       q.dataset.originalQuote=direct.quote;
+      q.dataset.continuityApplied='0';
       return direct;
     }
-    const id=q.dataset.scenarioId;
-    return id?data.find(x=>x.id===id)||null:null;
+    const id=q.dataset.scenarioId||'';
+    const tagged=byId.get(id)||null;
+    if(!tagged)return null;
+    if(q.dataset.continuityApplied==='1'&&neutral[id]===visible)return tagged;
+    if(q.dataset.originalQuote===visible)return tagged;
+    return null;
   }
 
   function apply(){
-    const q=$('quote');if(!q)return;
-    const item=currentItem();if(!item)return;
+    const q=$('quote');
+    if(!q)return;
+    const item=currentItem();
+    if(!item)return;
     const count=String($('count')?.textContent||'');
     const key=`${count}:${item.id}`;
     if(key===lastKey&&q.dataset.continuityApplied==='1')return;
     lastKey=key;
     const next=neutral[item.id];
     if(next&&q.textContent!==next){
+      q.dataset.scenarioId=item.id;
+      q.dataset.originalQuote=item.quote;
+      q.dataset.continuityApplied='1';
       q.textContent=next;
-      q.dataset.continuityApplied='1';
-    }else{
-      q.dataset.continuityApplied='1';
+      return;
     }
+    q.dataset.continuityApplied='1';
   }
 
   let queued=false;
