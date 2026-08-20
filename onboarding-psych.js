@@ -3,10 +3,6 @@
   const STORAGE_KEY = 'rfd-onboarding-v1';
   const labels = ['親密焦慮','親密迴避','界線清晰','衝動決策'];
 
-  // Psychology-informed calibration layer.
-  // Each scenario/choice is hand-labelled. No keyword inference is used.
-  // Values are descriptive game scores, not validated clinical scale scores.
-  // Order: [anxiety, avoidance, boundary, impulsivity]
   const calibration = {
     'P01-01': [[72,24,78,32],[55,20,86,24],[34,45,38,64]],
     'P01-09': [[68,22,80,30],[52,18,84,22],[38,44,42,60]],
