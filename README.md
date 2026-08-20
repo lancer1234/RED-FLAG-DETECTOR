@@ -1,5 +1,8 @@
 # RED FLAG DETECTOR
 
+**A game by MAKOTO LAB**  
+*Interactive Games & Digital Experiments*
+
 一款戀愛情境選擇遊戲。
 
 妳會遇到各種約會、曖昧、交往與突發狀況。沒有標準答案，請照妳真的會做的方式選。
@@ -125,10 +128,16 @@ https://lancer1234.github.io/RED-FLAG-DETECTOR/
 
 ---
 
+## MAKOTO LAB
+
+**Interactive Games & Digital Experiments**
+
+RED FLAG DETECTOR is developed and published by **MAKOTO LAB**.
+
 ## Copyright / 授權
 
-**© 2026 RED FLAG DETECTOR. All Rights Reserved.**
+**© 2026 MAKOTO LAB. All Rights Reserved.**
 
-本專案為非開源專案。除個人、非商業用途遊玩已公開的遊戲外，未經著作權人事先書面同意，不得複製、修改、重製、散布、轉售、商業使用、公開架設或製作衍生作品。
+本專案為 MAKOTO LAB 所有之非開源專案。除個人、非商業用途遊玩已公開的遊戲外，未經 MAKOTO LAB 事先書面同意，不得複製、修改、重製、散布、轉售、商業使用、公開架設或製作衍生作品。
 
 原始碼公開可見不代表授予任何開源授權。完整條款請見 [`LICENSE`](./LICENSE)。
