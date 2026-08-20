@@ -44,7 +44,6 @@
     });
     [...arcs.values()].forEach(group => group.sort((a,b)=>(a.stage||0)-(b.stage||0)));
 
-    // Keep the original feel: arcs remain common and rare files remain occasional.
     const includeArc = arcs.size > 0 && nativeRandom() < .90;
     const includeRare = rare.length > 0 && nativeRandom() < .25;
     const chosenArc = includeArc ? shuffle([...arcs.values()])[0] : [];
@@ -66,8 +65,6 @@
       selectedSingles.push(...calibrationSingles.filter(x => !used.has(x.id)).slice(0, fillerSlots-selectedSingles.length));
     }
 
-    // If a future content change reduces the calibration pool, report it rather
-    // than cloning cards or silently changing scoring semantics.
     const guaranteed = selectedSingles.filter(x => CALIBRATION_IDS.has(x.id)).length + arcCalibration;
     return {
       rounds,
@@ -88,9 +85,6 @@
     let filterCall = 0;
     let randomCall = 0;
 
-    // app-v2's buildDeck is closure-private. During only this synchronous call,
-    // provide it a pre-balanced view of the same data arrays. Nothing persists
-    // after the deck has been built.
     data.filter = function(callback, thisArg) {
       filterCall += 1;
       if (filterCall === 1) return plan.rare;
