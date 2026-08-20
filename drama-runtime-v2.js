@@ -113,9 +113,6 @@
   if($('count'))roundObserver.observe($('count'),{childList:true,characterData:true,subtree:true});
   if($('quote'))roundObserver.observe($('quote'),{childList:true,characterData:true,subtree:true});
 
-  // Important: only watch interactionPanel's own class. The previous runtime
-  // watched the whole subtree, then changed speaker text inside its callback,
-  // which retriggered itself forever on GROUP CHAT (notably P06-07).
   const panel=$('interactionPanel');
   if(panel){
     const panelObserver=new MutationObserver(()=>{

@@ -35,7 +35,6 @@
   function hookFor(item){
     if(item && item.hook) return item.hook;
     if(item && exact[item.id]) return exact[item.id];
-    // Never borrow a joke from another scenario. The scenario's own type is the safe fallback.
     return item && item.type ? item.type : '';
   }
 

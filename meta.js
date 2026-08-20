@@ -13,8 +13,6 @@
     direct:'直球溝通', avoidant:'先算了派', action:'看行動派', romantic:'心動優先'
   };
 
-  // IDs match events.js (E01, E03...) so these flags really can carry into
-  // later character cards.
   const eventChains = {
     E01:{flag:'datingScreenshot',targets:['P01','P04','P09','P12'],label:'CROSS FILE // 妳手機裡還躺著那張交友軟體截圖'},
     E03:{flag:'mutualWarning',targets:['P01','P04','P06','P12'],label:'CROSS FILE // 共同好友那句「有件事不知道該不該講」還沒忘'},
