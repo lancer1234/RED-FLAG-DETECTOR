@@ -51,6 +51,8 @@ https://lancer1234.github.io/RED-FLAG-DETECTOR/
 
 不要刻意追求某一條越高越好，依照自己的直覺玩即可。
 
+數值碰到 **0 或 100** 時會先進入極端警告狀態，不會立刻結束遊戲。只有在遊戲後段仍持續把同一項數值往相同極端推進，才可能觸發提前結局。
+
 ## TONIGHT MODIFIER
 
 每一局開始時，畫面上方可能出現一個 **TONIGHT MODIFIER**。
