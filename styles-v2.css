@@ -8,4 +8,15 @@
 
 .overlay.end{align-items:flex-start;scroll-padding-top:20px}.result-terminal .rgrid,.result-terminal>.dex{display:none!important}
 
-@keyframes scoreUp{0%{color:#81bc8e;text-shadow:0 0 0 rgba(129,188,142,0)}35%{color:#b7e0c1;text-shadow:0 0 12px rgba(129,188,142,.85)}100%{text-shadow:none}}@keyframes scoreDown{0%{color:#ed8c96;text-shadow:0 0 0 rgba(224,90,103,0)}35%{color:#ffc0c6;text-shadow:0 0 12px rgba(224,90,103,.85)}100%{text-shadow:none}}@keyframes warnPulse{50%{opacity:.72}}@media(max-width:360px){.modifier-strip,.trait-strip,.system-warning{font-size:9px}.cross-hook{font-size:10px}.feedback-deltas{grid-template-columns:1fr 1fr}.delta-chip{padding:8px}.delta-chip b{font-size:17px}.studio-credit b{font-size:9px}.studio-credit span{font-size:8px}}
+@keyframes scoreUp{0%{color:#81bc8e;text-shadow:0 0 0 rgba(129,188,142,0)}35%{color:#b7e0c1;text-shadow:0 0 12px rgba(129,188,142,.85)}100%{text-shadow:none}}@keyframes scoreDown{0%{color:#ed8c96;text-shadow:0 0 0 rgba(224,90,103,0)}35%{color:#ffc0c6;text-shadow:0 0 12px rgba(224,90,103,.85)}100%{text-shadow:none}}@keyframes warnPulse{50%{opacity:.72}}
+@media(max-width:430px) and (max-height:900px){
+  .modifier-strip{padding:5px 8px;font-size:9px;line-height:1.3}.modifier-strip b{margin-bottom:1px}
+  .system-warning{padding:5px 8px;font-size:9px;line-height:1.3}
+  .trait-strip{padding:5px 8px;font-size:9px;line-height:1.3}
+  .relationship-state{margin:-1px 0 5px;padding:3px 5px;font-size:9px}
+  .cross-hook{margin:-1px 0 5px;padding:5px 6px;font-size:9px;line-height:1.3}
+  .rfd-dev-show-impact .choices small.impact{margin-top:3px;font-size:9px;line-height:1.25}
+  .feedback{padding:7px 8px}.feedback-note{font-size:10px;line-height:1.35;margin-bottom:5px}.feedback-deltas{gap:4px}.delta-chip{padding:6px 7px;min-height:36px}.delta-chip small{font-size:8px}.delta-chip b{font-size:15px}
+}
+@media(max-width:360px){.modifier-strip,.trait-strip,.system-warning{font-size:9px}.cross-hook{font-size:10px}.feedback-deltas{grid-template-columns:1fr 1fr}.delta-chip{padding:8px}.delta-chip b{font-size:17px}.studio-credit b{font-size:9px}.studio-credit span{font-size:8px}}
+@media(max-width:360px) and (max-height:900px){.modifier-strip,.trait-strip,.system-warning{font-size:8px}.cross-hook{font-size:9px}.delta-chip{padding:5px}.delta-chip b{font-size:14px}}
