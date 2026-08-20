@@ -45,9 +45,43 @@
   const rows = allChoices();
   const before = audit(rows);
 
-  // 1) First reduce overall volatility so a normal run can usually reach the end.
+  // Choice semantics are more important than a mathematically symmetrical pool.
+  // Healthy communication/trust/balanced choices should be able to build LOVE,
+  // and merely being mature should not automatically drain CHAOS every round.
+  // These signatures correspond to the shared choice templates in choices.js.
+  const semanticPresets = new Map([
+    ['-3,8,12,-3',[-1,6,9,-2]],   // boundary
+    ['1,9,6,-1',[2,7,5,0]],       // verify
+    ['7,-6,-6,7',[5,-4,-4,4]],    // soften / accommodate
+    ['3,6,8,-3',[5,5,7,0]],       // communicate
+    ['1,7,4,-1',[2,6,4,0]],       // observe
+    ['2,-5,-5,5',[2,-4,-4,4]],    // avoid
+    ['7,1,4,-3',[7,1,4,0]],        // trust
+    ['3,5,4,-1',[5,4,4,0]],        // balanced
+    ['-1,7,2,2',[0,7,2,2]],        // radar
+    ['-6,11,12,-5',[-6,10,11,-4]], // exit
+    ['9,-7,-7,8',[8,-6,-6,7]],     // chance
+    ['8,1,3,-1',[8,1,3,1]],        // love
+    ['9,-5,-5,12',[8,-5,-5,10]],   // chaos
+    ['1,7,8,-3',[3,6,7,-1]],       // pace
+    ['1,7,9,-2',[3,6,8,-1]]        // money
+  ]);
+
+  let semanticAdjusted = 0;
   rows.forEach(({choice,kind}) => {
-    const factor = kind === 'event' ? 0.78 : 0.68;
+    if (kind !== 'character') return;
+    const signature = choice.delta.map(v => Number(v || 0)).join(',');
+    const preset = semanticPresets.get(signature);
+    if (!preset) return;
+    choice.delta = [...preset];
+    semanticAdjusted += 1;
+  });
+
+  const semantic = audit(rows);
+
+  // Reduce volatility so ordinary 20/50-card runs can still reach the end.
+  rows.forEach(({choice,kind}) => {
+    const factor = kind === 'event' ? 0.78 : 0.72;
     const cap = kind === 'event' ? 9 : 8;
     choice.delta = choice.delta.map(value => {
       if (!value) return 0;
@@ -56,14 +90,13 @@
     });
   });
 
-  // 2) Measure the scaled library, then independently balance positive and
-  // negative magnitude for every meter. This removes structural drift such as
-  // STANDARD being positive in most high-frequency choice templates.
+  // Whole-library correction is intentionally gentle now. The previous wider
+  // 0.68–1.32 correction could undo semantic tuning just to make totals look even.
   const scaled = audit(rows);
   const directionFactors = scaled.map(stat => {
     if (!stat.positiveSum || !stat.negativeSum) return {positive:1,negative:1};
-    const positive = clamp(Math.sqrt(stat.negativeSum / stat.positiveSum), 0.68, 1.32);
-    const negative = clamp(Math.sqrt(stat.positiveSum / stat.negativeSum), 0.68, 1.32);
+    const positive = clamp(Math.sqrt(stat.negativeSum / stat.positiveSum), 0.85, 1.15);
+    const negative = clamp(Math.sqrt(stat.positiveSum / stat.negativeSum), 0.85, 1.15);
     return {positive,negative};
   });
 
@@ -76,12 +109,11 @@
     });
   });
 
-  // 3) Equalise total activity across all four meters so one meter does not
-  // simply move much more often/strongly than the others.
+  // Keep the four meters similarly active without forcing them to be identical.
   const directional = audit(rows);
   const activity = directional.map(stat => stat.positiveSum + stat.negativeSum);
   const targetActivity = activity.reduce((a,b)=>a+b,0) / Math.max(1,activity.length);
-  const axisFactors = activity.map(value => value ? clamp(targetActivity/value,0.82,1.18) : 1);
+  const axisFactors = activity.map(value => value ? clamp(targetActivity/value,0.90,1.10) : 1);
 
   rows.forEach(({choice}) => {
     choice.delta = choice.delta.map((value,index) => {
@@ -91,12 +123,11 @@
     });
   });
 
-  // TONIGHT MODIFIER still changes the feel of a run, but no longer stacks a
-  // huge multiplier on top of an already directional card pool.
+  // TONIGHT MODIFIER changes flavour, not the fundamental meaning of a choice.
   (window.RED_FLAG_META?.modifiers || []).forEach(modifier => {
     if (!Array.isArray(modifier.mult)) return;
     modifier.mult = modifier.mult.map(value => {
-      const balanced = 1 + (value - 1) * 0.35;
+      const balanced = 1 + (value - 1) * 0.30;
       return Math.round(balanced * 100) / 100;
     });
   });
@@ -104,18 +135,24 @@
   const after = audit(rows);
   window.RED_FLAG_BALANCE_REPORT = {
     cards: rows.length,
+    semanticAdjusted,
     before,
+    semantic,
     after,
     directionFactors,
-    axisFactors
+    axisFactors,
+    policy: {
+      love: 'Healthy intimacy and communication may increase LOVE; LOVE is emotional investment, not gullibility.',
+      chaos: 'Neutral mature choices usually leave CHAOS near zero; CHAOS moves mainly for playfulness, risk, impulse or active drama avoidance.'
+    }
   };
 
-  // Useful when tuning future content: open DevTools and inspect the exact
-  // whole-library positive/negative distribution before and after balancing.
   if (typeof console !== 'undefined' && console.table) {
-    console.info('[RED FLAG DETECTOR] Full card-pool balance audit — BEFORE');
+    console.info('[RED FLAG DETECTOR] Balance audit — ORIGINAL');
     console.table(before);
-    console.info('[RED FLAG DETECTOR] Full card-pool balance audit — AFTER');
+    console.info('[RED FLAG DETECTOR] Balance audit — SEMANTIC RECALIBRATION');
+    console.table(semantic);
+    console.info('[RED FLAG DETECTOR] Balance audit — FINAL');
     console.table(after);
   }
 })();
