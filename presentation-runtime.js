@@ -1,8 +1,4 @@
 (() => {
-  // BUILD 5.5 presentation runtime
-  // Consolidates small UI-only helpers. Observers read one surface and mutate
-  // a different surface (or react only to class visibility), avoiding observer loops.
-
   function installDangerPresentation() {
     const role = document.getElementById('role');
     const badge = document.getElementById('eventBadge');
@@ -75,8 +71,6 @@
     const data = window.RED_FLAG_DATA || [];
     const events = window.RED_FLAG_EVENTS || [];
 
-    // Capture complete totals before audio-system.js narrows RED_FLAG_EVENTS to
-    // a per-run candidate pool. DEX totals describe the whole game catalog.
     const uniqueCount = (items, predicate = () => true) => new Set(
       items.filter(item => item && item.id && predicate(item)).map(item => item.id)
     ).size;
