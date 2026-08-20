@@ -1,7 +1,7 @@
 (() => {
   // Internal runtime tools. Intentionally not linked from the player UI.
   const $ = id => document.getElementById(id);
-  const seq = [38,38,40,40,37,39,37,39,66,65];
+  const seq = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
   let pos = 0;
   let panel = null;
   let timer = null;
@@ -50,7 +50,7 @@
     if(panel) return panel;
     const style=document.createElement('style');
     style.id='rfdInternalToolsStyle';
-    style.textContent=`.rfd-it{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.rfd-it-box{width:min(620px,94vw);max-height:88vh;overflow:auto;background:#080c0f;border:1px solid #53626b;box-shadow:0 20px 80px #000;padding:18px;color:#c9d3d2}.rfd-it-head{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #29353b;padding-bottom:12px;margin-bottom:14px}.rfd-it-title{font-size:12px;letter-spacing:.12em;color:#d2b06d}.rfd-it-x,.rfd-it button{border:1px solid #35434a;background:#0d1418;color:#9fc7c6;padding:8px 10px;font:700 10px monospace;cursor:pointer}.rfd-it-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rfd-it-card{border:1px solid #273239;padding:12px;background:#0a0f12}.rfd-it-card h3{font-size:9px;color:#70888b;letter-spacing:.1em;margin:0 0 9px}.rfd-it-status{font-size:10px;line-height:1.8;word-break:break-word}.rfd-it-actions{display:flex;flex-wrap:wrap;gap:7px}.rfd-it-note{font-size:9px;line-height:1.6;color:#788584;margin-top:12px}.rfd-it input[type=range]{width:100%}@media(max-width:560px){.rfd-it-grid{grid-template-columns:1fr}}`;
+    style.textContent=`.rfd-it{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.82);display:grid;place-items:center;padding:18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}.rfd-it-box{width:min(620px,94vw);max-height:88vh;overflow:auto;background:#080c0f;border:1px solid #53626b;box-shadow:0 20px 80px #000;padding:18px;color:#c9d3d2}.rfd-it-head{display:flex;justify-content:space-between;gap:12px;align-items:center;border-bottom:1px solid #29353b;padding-bottom:12px;margin-bottom:14px}.rfd-it-title{font-size:12px;letter-spacing:.12em;color:#d2b06d}.rfd-it-x,.rfd-it button{border:1px solid #35434a;background:#0d1418;color:#9fc7c6;padding:8px 10px;font:700 10px monospace;cursor:pointer}.rfd-it-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rfd-it-card{border:1px solid #273239;padding:12px;background:#0a0f12}.rfd-it-card h3{font-size:9px;color:#70888b;letter-spacing:.1em;margin:0 0 9px}.rfd-it-status{font-size:10px;line-height:1.8;word-break:break-word}.rfd-it-actions{display:flex;flex-wrap:wrap;gap:7px}.rfd-it-note{font-size:9px;line-height:1.6;color:#788584;margin-top:12px}@media(max-width:560px){.rfd-it-grid{grid-template-columns:1fr}}`;
     document.head.appendChild(style);
 
     panel=document.createElement('div');
@@ -84,14 +84,36 @@
     clearInterval(timer);timer=null;
   }
 
+  function normalizeCode(e){
+    // KeyboardEvent.code is layout/IME independent, so B/A still work when the
+    // user is on a Traditional Chinese input method in Safari/Chrome.
+    if(/^Arrow(?:Up|Down|Left|Right)$/.test(e.code)) return e.code;
+    if(e.code==='KeyA'||e.code==='KeyB') return e.code;
+    // Fallback for older browsers that do not expose code reliably.
+    if(/^Arrow(?:Up|Down|Left|Right)$/.test(e.key)) return e.key;
+    const key=String(e.key||'').toLowerCase();
+    if(key==='a') return 'KeyA';
+    if(key==='b') return 'KeyB';
+    return '';
+  }
+
   window.addEventListener('keydown',e=>{
-    if(panel&&panel.style.display!=='none'&&e.key==='Escape'){e.preventDefault();closePanel();return;}
+    if(panel&&panel.style.display!=='none'&&(e.code==='Escape'||e.key==='Escape')){e.preventDefault();closePanel();return;}
     if(!startVisible()) return;
     const tag=String(e.target?.tagName||'').toLowerCase();
     if(tag==='input'||tag==='textarea'||e.target?.isContentEditable) return;
-    const code=e.key.length===1 ? e.key.toUpperCase().charCodeAt(0) : ({ArrowUp:38,ArrowDown:40,ArrowLeft:37,ArrowRight:39}[e.key]||0);
-    if(code===seq[pos]) pos+=1;
-    else pos=code===seq[0]?1:0;
+    const code=normalizeCode(e);
+    if(!code) return;
+    if(code===seq[pos]){
+      pos+=1;
+      e.preventDefault();
+    }else{
+      pos=code===seq[0]?1:0;
+    }
     if(pos===seq.length){pos=0;openPanel();}
   },true);
+
+  // Non-player-facing diagnostic hook, useful from DevTools if keyboard input
+  // is intercepted by a browser extension or remote keyboard.
+  Object.defineProperty(window,'__rfdRuntimeTools',{value:Object.freeze({open:openPanel,close:closePanel}),configurable:true});
 })();
