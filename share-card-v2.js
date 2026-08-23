@@ -73,7 +73,7 @@
       ctx.fill();
     });
     labels.forEach((label,i)=>{
-      const rr=radius+78;
+      const rr=radius+70;
       const x=cx+Math.cos(angles[i])*rr;
       const y=cy+Math.sin(angles[i])*rr;
       ctx.textAlign='center';
@@ -124,7 +124,7 @@
     ctx.font='27px sans-serif';
     wrap(ctx,desc,130,390,820,42,2);
 
-    drawRadar(ctx,stats,540,770,220);
+    drawRadar(ctx,stats,540,735,195);
 
     ctx.fillStyle='#d2b06d';
     ctx.font='26px monospace';
