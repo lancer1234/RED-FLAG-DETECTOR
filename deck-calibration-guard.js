@@ -135,7 +135,7 @@
       includeArc,
       includeRare,
       chosenArc,
-      rare: orderedRare,
+      rare: chosenRare.length ? chosenRare : orderedRare,
       selectedSingles,
       repeatCount,
       recentRuns: history.runs.length,

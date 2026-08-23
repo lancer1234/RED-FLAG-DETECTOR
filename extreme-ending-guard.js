@@ -151,30 +151,27 @@
     return true;
   }
 
-  function isCrisisFinishCallback(fn, delay) {
-    if (typeof fn !== 'function' || Number(delay) !== 520) return false;
-    try { return /finish\s*\(\s*crisis\s*\)/.test(Function.prototype.toString.call(fn)); }
-    catch { return false; }
+  const runtime = window.RED_FLAG_RUNTIME;
+  if (!runtime) {
+    console.error('[RED FLAG DETECTOR] Runtime hook unavailable; extreme policy disabled.');
+    return;
   }
 
-  window.setTimeout = function(fn, delay, ...args) {
-    if (!isCrisisFinishCallback(fn, delay)) return nativeSetTimeout(fn, delay, ...args);
-
-    const crisis = crisisFromStats();
+  runtime.scheduleCrisis = function({ crisis, item, choiceIndex, onFinish }) {
     const { round, total } = roundInfo();
-    const selected = $('choices')?.querySelector('button.selected');
-    const choiceIndex = Number(selected?.dataset?.choice ?? -1);
-    const item = currentItem();
-    const delta = crisis ? feedbackDelta(crisis.index) : 0;
-    const snapshot = { crisis, round, total, choiceIndex, item, delta };
+    const resolvedCrisis = crisis || crisisFromStats();
+    const resolvedItem = item || currentItem();
+    const resolvedChoiceIndex = Number.isFinite(choiceIndex) ? choiceIndex : Number($('choices')?.querySelector('button.selected')?.dataset?.choice ?? -1);
+    const delta = resolvedCrisis ? feedbackDelta(resolvedCrisis.index) : 0;
+    const snapshot = { crisis:resolvedCrisis, round, total, choiceIndex:resolvedChoiceIndex, item:resolvedItem, delta };
 
     return nativeSetTimeout(() => {
       if (shouldAllowExtreme(snapshot)) {
-        fn(...args);
+        onFinish();
         return;
       }
       showProtectedInteraction(snapshot.item, snapshot.choiceIndex);
-    }, delay);
+    }, 520);
   };
 
   const choices = $('choices');

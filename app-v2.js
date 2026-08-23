@@ -39,6 +39,9 @@
     modifier:null,traits:{soft:0,boundary:0,detective:0,chaos:0,direct:0,avoidant:0,action:0,romantic:0},
     personaStats:{},flags:{},specialChoices:0
   };
+  const runtime=window.RED_FLAG_RUNTIME||(window.RED_FLAG_RUNTIME={});
+  runtime.scheduleCrisis=runtime.scheduleCrisis||(({onFinish})=>setTimeout(onFinish,520));
+  runtime.getState=()=>state;
 
   const $=id=>document.getElementById(id);
   const clamp=v=>Math.max(0,Math.min(100,v));
@@ -165,7 +168,7 @@
   function getOptions(item){const base=item.kind==='event'?(item.options||[]):(typeof interactions.contextualOptions==='function'?interactions.contextualOptions(item):item.options||[]);const s=specialChoice(item);return s?[...base,s]:base;}
 
   function renderRound(){
-    const item=state.deck[state.index];if(!item)return;const persona=personas[item.persona]||{name:'UNKNOWN',role:'關係未定義',profile:''};state.locked=false;hideInteraction();renderRecap(item,persona);
+    const item=state.deck[state.index];if(!item)return;const persona=personas[item.persona]||{name:'UNKNOWN',role:'關係未定義',profile:''};state.locked=false;hideInteraction();renderRecap(item,persona);$('quote').dataset.scenarioId=item.id||'';
     $('feedback').className='feedback hidden';$('target').textContent=(item.kind==='event'?'EVENT #':'TARGET #')+String(state.index+1).padStart(2,'0');$('count').textContent=String(state.index+1).padStart(2,'0')+' / '+state.deck.length;
     const identity=displayIdentity(item,persona);$('dramaHook').textContent=typeof flavor.hookFor==='function'?flavor.hookFor(item):item.type;$('role').textContent=identity.eyebrow;$('who').textContent=identity.main;$('quote').textContent=item.quote;
     const cross=crossHook(item);$('crossHook').textContent=cross;$('crossHook').classList.toggle('hidden',!cross);
@@ -187,7 +190,7 @@
     traitFrom(choice,effective).forEach(t=>state.traits[t]++);applyPersona(item,effective,choice);applyEventFlag(item,i);updateStats();
     $('feedback').textContent=`${choice.note} // ${effective.map((v,n)=>v?`${labels[n]} ${v>0?'+':''}${v}`:'').filter(Boolean).join(' · ')}`;$('feedback').className='feedback';$('game').classList.add('glitch');setTimeout(()=>$('game').classList.remove('glitch'),180);if(navigator.vibrate)navigator.vibrate(18);
     const p=interactionPayload(item,i);remember(item,choice,p);persistDiscovery(item);
-    const crisis=checkCrisis();if(crisis){setTimeout(()=>finish(crisis),520);return;}if(p.story||p.shouldReply){setTimeout(()=>showInteraction(item,i,p),260);return;}setTimeout(advanceRound,650);
+    const crisis=checkCrisis();if(crisis){runtime.scheduleCrisis({crisis,item,choiceIndex:i,onFinish:()=>finish(crisis)});return;}if(p.story||p.shouldReply){setTimeout(()=>showInteraction(item,i,p),260);return;}setTimeout(advanceRound,650);
   }
 
   function advanceRound(){hideInteraction();state.index++;updateProgress();if(state.index>=state.deck.length)finish();else renderRound();}
@@ -200,7 +203,7 @@
   function finish(crisis=null){if(crisis){const r=crisisEndings[`${crisis.index}-${crisis.side}`];state.ending={name:r[0],description:r[1],summary:r[2]};}const [n,d,s]=currentResult();$('resultKicker').textContent=state.ending?'SYSTEM COLLAPSE // EXTREME ENDING':(s.startsWith('HIDDEN')?'SECRET FILE // HIDDEN ENDING':'PLAYER FILE // TONIGHT\'S VERDICT');$('className').textContent=n;$('classDesc').textContent=d;state.stats.forEach((v,i)=>$('r'+i).textContent=v);$('summaryLine').textContent=s;$('traitResult').textContent='TRAITS // '+Object.entries(state.traits).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]).slice(0,4).map(([k,v])=>`${meta.traitLabels[k]||k} ${v}`).join(' · ');$('dex').innerHTML=state.seen.map(x=>`<span>${x}</span>`).join('');$('end').classList.remove('hidden');}
 
   function resultText(){const [n,,s]=currentResult();return['RED FLAG DETECTOR',`RESULT: ${n}`,`LOVE ${state.stats[0]} / RADAR ${state.stats[1]} / STANDARD ${state.stats[2]} / CHAOS ${state.stats[3]}`,s,$('traitResult').textContent].join('\n');}
-  async function copyResult(){try{await navigator.clipboard.writeText(resultText());}catch{}$('copyStatus').textContent='已複製結果';$('copyStatus').classList.remove('hidden');setTimeout(()=>$('copyStatus').classList.add('hidden'),1600);}
+  async function copyResult(){let copied=false;try{await navigator.clipboard.writeText(resultText());copied=true;}catch(error){console.warn('[RED FLAG DETECTOR] Clipboard write failed:',error);}$('copyStatus').textContent=copied?'已複製結果':'複製失敗，請允許剪貼簿權限後再試';$('copyStatus').classList.remove('hidden');setTimeout(()=>$('copyStatus').classList.add('hidden'),copied?1600:2600);}
 
   function saveResultCard(){const c=$('resultCanvas'),ctx=c.getContext('2d'),[n,d,s]=currentResult();ctx.fillStyle='#07090b';ctx.fillRect(0,0,1080,1920);ctx.strokeStyle='#364049';ctx.lineWidth=4;ctx.strokeRect(70,70,940,1780);ctx.fillStyle='#d2b06d';ctx.font='700 54px Georgia';ctx.textAlign='center';ctx.fillText('RED FLAG DETECTOR',540,180);ctx.fillStyle='#62c7c9';ctx.font='24px monospace';ctx.fillText('RELATIONSHIP OS // BUILD 4.0',540,245);ctx.fillStyle='#efe4cc';ctx.font='700 72px serif';ctx.fillText(n,540,380);ctx.textAlign='left';ctx.fillStyle='#9b9f98';ctx.font='30px sans-serif';wrap(ctx,d,130,470,820,48);labels.forEach((lab,i)=>{const y=700+i*170;ctx.fillStyle='#8f9693';ctx.font='24px monospace';ctx.fillText(lab,130,y);ctx.fillStyle='#efe4cc';ctx.font='700 54px monospace';ctx.fillText(String(state.stats[i]),130,y+58);ctx.strokeStyle='#263038';ctx.strokeRect(360,y+10,570,34);ctx.fillStyle='#d2b06d';ctx.fillRect(360,y+10,570*state.stats[i]/100,34);});ctx.fillStyle='#d2b06d';ctx.font='27px monospace';wrap(ctx,s,130,1430,820,42);ctx.fillStyle='#9b9f98';ctx.font='24px monospace';wrap(ctx,$('traitResult').textContent,130,1540,820,38);const a=document.createElement('a');a.download='red-flag-detector-result.png';a.href=c.toDataURL('image/png');a.click();}
   function wrap(ctx,text,x,y,w,h){let line='',row=0;[...text].forEach((ch,i)=>{const test=line+ch;if(ctx.measureText(test).width>w&&line){ctx.fillText(line,x,y+row*h);line=ch;row++;}else line=test;if(i===text.length-1)ctx.fillText(line,x,y+row*h);});}
