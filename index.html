@@ -9,10 +9,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="RED FLAG DETECTOR — 戀愛情境選擇遊戲">
   <title>RED FLAG DETECTOR</title>
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="styles-v2.css">
-  <link rel="stylesheet" href="drama.css">
-  <link rel="stylesheet" href="mobile-polish.css">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/styles-v2.css">
+  <link rel="stylesheet" href="assets/css/drama.css">
+  <link rel="stylesheet" href="assets/css/mobile-polish.css">
 </head>
 <body>
   <main class="wrap">
@@ -34,42 +34,45 @@
   <section class="overlay end hidden" id="end"><div class="terminal result-terminal" id="resultTerminal"><div class="result-title" id="resultKicker">PLAYER FILE // TONIGHT'S VERDICT</div><div class="class" id="className"></div><p id="classDesc"></p><div class="rgrid"><div class="rbox">LOVE<b id="r0"></b></div><div class="rbox">RADAR<b id="r1"></b></div><div class="rbox">STANDARD<b id="r2"></b></div><div class="rbox">CHAOS<b id="r3"></b></div></div><div class="summary-line" id="summaryLine"></div><div class="trait-result" id="traitResult"></div><div class="dex"><div class="result-title">DETECTED TYPES & EVENTS</div><div id="dex"></div></div><div class="studio-credit result-credit"><b>MAKOTO LAB</b><span>Interactive Games &amp; Digital Experiments</span></div><div class="result-actions"><button class="pxbtn" id="saveCard">產生結果卡 / RESULT CARD</button><button class="pxbtn" id="copyResult">複製結果 / COPY RESULT</button><button class="pxbtn secondary" id="openDexEnd">已偵測檔案 / DETECTED FILES</button><button class="pxbtn secondary" id="again">再掃描一次 / SCAN AGAIN</button></div><div class="copy-status hidden" id="copyStatus"></div><canvas id="resultCanvas" width="1080" height="1920" class="result-canvas hidden" aria-hidden="true"></canvas></div></section>
   <section class="overlay hidden" id="dexOverlay"><div class="terminal dex-terminal"><div class="result-title">DETECTED FILES // 長期紀錄</div><p>只會記錄妳真的遇過的人物、事件與特殊檔案。資料只存在這台瀏覽器。</p><div id="dexContent" class="dex-content"></div><div class="studio-credit dex-credit"><b>MAKOTO LAB</b><span>Interactive Games &amp; Digital Experiments</span></div><button class="pxbtn secondary" id="closeDex">關閉 / CLOSE</button></div></section>
 
-  <script src="data.js"></script>
-  <script src="choices.js"></script>
-  <script src="events.js"></script>
-  <script src="interactions-v2.js"></script>
+  <!-- Core data and game rules. Load order is intentional. -->
+  <script src="js/core/data.js"></script>
+  <script src="js/core/choices.js"></script>
+  <script src="js/core/events.js"></script>
+  <script src="js/core/interactions-v2.js"></script>
 
-  <script src="wild-expansion.js"></script>
-  <script src="dcard-expansion.js"></script>
-  <script src="danger-expansion.js"></script>
-  <script src="attachment-expansion.js"></script>
-  <script src="content-integrity.js"></script>
+  <!-- Content expansions and reply libraries. -->
+  <script src="js/content/wild-expansion.js"></script>
+  <script src="js/content/dcard-expansion.js"></script>
+  <script src="js/content/danger-expansion.js"></script>
+  <script src="js/content/attachment-expansion.js"></script>
+  <script src="js/guards/content-integrity.js"></script>
 
-  <script src="expanded-replies.js"></script>
-  <script src="legacy-exact-replies.js"></script>
-  <script src="reply-expansion-v3.js"></script>
-  <script src="flavor.js"></script>
-  <script src="meta.js"></script>
-  <script src="drama-content.js"></script>
-  <script src="strict-replies.js"></script>
+  <script src="js/content/expanded-replies.js"></script>
+  <script src="js/content/legacy-exact-replies.js"></script>
+  <script src="js/content/reply-expansion-v3.js"></script>
+  <script src="js/content/flavor.js"></script>
+  <script src="js/core/meta.js"></script>
+  <script src="js/content/drama-content.js"></script>
+  <script src="js/content/strict-replies.js"></script>
 
-  <script src="balance.js"></script>
-  <script src="app-v2.js"></script>
+  <script src="js/core/balance.js"></script>
+  <script src="js/runtime/app-v2.js"></script>
   <script>document.querySelector('.mode-btn.active')?.click();</script>
 
-  <script src="wild-visuals.js"></script>
-  <script src="quality-guard.js"></script>
-  <script src="deck-calibration-guard.js"></script>
-  <script src="onboarding-psych.js"></script>
-  <script src="share-card-v2.js"></script>
-  <script src="presentation-runtime.js"></script>
-  <script src="audio-system.js"></script>
-  <script src="extreme-ending-guard.js"></script>
-  <script src="drama-choice-guard.js"></script>
-  <script src="continuity-runtime.js"></script>
-  <script src="drama-runtime-v2.js"></script>
-  <script src="runtime-tools.js"></script>
-  <script src="choice-flow-guard.js"></script>
+  <!-- Presentation/runtime enhancements, followed by behavioral guards. -->
+  <script src="js/runtime/wild-visuals.js"></script>
+  <script src="js/guards/quality-guard.js"></script>
+  <script src="js/guards/deck-calibration-guard.js"></script>
+  <script src="js/runtime/onboarding-psych.js"></script>
+  <script src="js/runtime/share-card-v2.js"></script>
+  <script src="js/runtime/presentation-runtime.js"></script>
+  <script src="js/runtime/audio-system.js"></script>
+  <script src="js/guards/extreme-ending-guard.js"></script>
+  <script src="js/guards/drama-choice-guard.js"></script>
+  <script src="js/runtime/continuity-runtime.js"></script>
+  <script src="js/runtime/drama-runtime-v2.js"></script>
+  <script src="js/runtime/runtime-tools.js"></script>
+  <script src="js/guards/choice-flow-guard.js"></script>
   <script>
     (()=>{
       const end=document.getElementById('end');
