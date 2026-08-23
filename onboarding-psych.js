@@ -5,8 +5,20 @@
 
   const calibration = {
     'P01-01': [[72,24,78,32],[55,20,86,24],[34,45,38,64]],
+    'P01-03': [[52,24,84,22],[44,24,80,18],[72,18,36,52]],
+    'P01-04': [[54,20,82,18],[42,30,70,20],[58,60,35,36]],
+    'P01-08': [[34,22,70,18],[46,28,72,18],[68,20,45,42]],
     'P01-09': [[68,22,80,30],[52,18,84,22],[38,44,42,60]],
+    'P01-10': [[64,20,78,24],[48,28,74,18],[70,44,38,42]],
+    'P02-04': [[40,22,78,18],[34,28,74,18],[62,52,38,34]],
+    'P02-07': [[42,20,80,18],[34,26,78,18],[60,48,40,34]],
     'P02-08': [[46,26,84,20],[35,42,72,20],[66,18,44,54]],
+    'P02-09': [[38,22,82,18],[34,28,78,18],[62,42,42,36]],
+    'P02-10': [[36,24,80,18],[40,30,78,18],[64,20,44,42]],
+    'P03-03': [[50,22,88,20],[42,24,82,18],[70,18,38,52]],
+    'P03-05': [[34,22,78,18],[42,28,74,18],[64,18,44,44]],
+    'P03-08': [[32,24,80,16],[42,30,76,18],[62,18,46,42]],
+    'P03-10': [[34,22,78,18],[42,30,74,18],[64,18,44,44]],
     'P04-02': [[70,18,82,26],[48,20,88,20],[30,48,42,56]],
     'P04-06': [[62,20,88,22],[45,24,84,18],[28,52,38,60]],
     'P04-09': [[64,18,90,20],[46,22,86,18],[30,48,40,58]],
@@ -34,11 +46,14 @@
 
   function currentItem(){
     const quote = $('quote');
-    const tagged = quote?.dataset?.scenarioId || '';
     const items = [...(window.RED_FLAG_DATA || []), ...(window.RED_FLAG_EVENTS || [])];
-    if (tagged) return items.find(item => item.id === tagged) || null;
     const text = String(quote?.textContent || '').trim();
-    return items.find(item => String(item.quote || '').trim() === text) || null;
+    if (text) {
+      const exact = items.find(item => String(item.quote || '').trim() === text);
+      if (exact) return exact;
+    }
+    const tagged = quote?.dataset?.scenarioId || '';
+    return tagged ? items.find(item => item.id === tagged) || null : null;
   }
 
   function resetPsych(){
@@ -65,8 +80,8 @@
   }
 
   function confidence(){
-    if (psych.samples >= 8) return '較高';
-    if (psych.samples >= 5) return '中等';
+    if (psych.samples >= 10) return '較高';
+    if (psych.samples >= 7) return '中等';
     return '低';
   }
 
@@ -96,7 +111,7 @@
       <div class="psych-kicker">RELATIONSHIP PATTERN // 關係傾向</div>
       <div class="psych-meta">參考度：${confidence()} · 本局校準情境 ${psych.samples} 題</div>
       ${rows}
-      <p>依本局部分日常關係情境的選擇整理，用來幫助自我觀察。這不是心理診斷，也不是正式心理量表分數。</p>`;
+      <p>前兩項以成人依附理論的核心題意改寫成遊戲情境；後兩項是本局行為傾向。用來幫助自我觀察，不是心理診斷，也不是正式心理量表分數。</p>`;
   }
 
   function installStyles(){
