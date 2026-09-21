@@ -37,7 +37,7 @@
   const state={
     deck:[],index:0,stats:[50,50,50,50],seen:[],history:[],locked:false,rounds:15,mode:'FULL SCAN',ending:null,
     modifier:null,traits:{soft:0,boundary:0,detective:0,chaos:0,direct:0,avoidant:0,action:0,romantic:0},
-    personaStats:{},flags:{},specialChoices:0
+    personaStats:{},flags:{},specialChoices:0,runId:'',caseFile:null,followUpUsed:false
   };
   const runtime=window.RED_FLAG_RUNTIME||(window.RED_FLAG_RUNTIME={});
   runtime.scheduleCrisis=runtime.scheduleCrisis||(({onFinish})=>setTimeout(onFinish,520));
@@ -45,19 +45,27 @@
 
   const $=id=>document.getElementById(id);
   const clamp=v=>Math.max(0,Math.min(100,v));
-  const shuffle=arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+  const CHECKPOINT_KEY='rfd-active-case-v1';
+  const hashSeed=text=>{let n=2166136261;for(const ch of String(text))n=Math.imul(n^ch.charCodeAt(0),16777619);return n>>>0;};
+  let random=Math.random;
+  const seededRandom=seed=>{let n=hashSeed(seed)||1;return()=>{n=(n+0x6D2B79F5)>>>0;let t=n;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};};
+  const makeRunId=()=>`${Date.now().toString(36)}-${Math.floor(Math.random()*0xffffff).toString(36).padStart(4,'0')}`;
+  const shuffle=arr=>{const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
   const hash=text=>[...String(text)].reduce((n,ch)=>((n<<5)-n+ch.charCodeAt(0))|0,0)>>>0;
 
   function buildDeck(rounds){
     const eventCount=rounds>=15?2:1;
     const coreRounds=rounds-eventCount;
-    const rare=data.filter(x=>x.rare);
-    const singles=data.filter(x=>!x.rare&&!x.arc);
+    // Copy before filtering: a deterministic CASE FILE must not inherit
+    // temporary monkey patches from optional deck-audit tooling.
+    const cards=[...data];
+    const rare=cards.filter(x=>x.rare);
+    const singles=cards.filter(x=>!x.rare&&!x.arc);
     const arcMap=new Map();
-    data.filter(x=>x.arc).forEach(x=>{if(!arcMap.has(x.arc))arcMap.set(x.arc,[]);arcMap.get(x.arc).push(x);});
+    cards.filter(x=>x.arc).forEach(x=>{if(!arcMap.has(x.arc))arcMap.set(x.arc,[]);arcMap.get(x.arc).push(x);});
     [...arcMap.values()].forEach(a=>a.sort((x,y)=>x.stage-y.stage));
-    const useArc=Math.random()<(rounds>=15?.9:.7);
-    const useRare=Math.random()<(rounds>=15?.25:.18);
+    const useArc=random()<(rounds>=15?.9:.7);
+    const useRare=random()<(rounds>=15?.25:.18);
     let deck=[];
     if(useArc&&arcMap.size){
       const arc=shuffle([...arcMap.values()])[0];
@@ -66,10 +74,10 @@
       const pos=rounds>=15?[1,Math.floor(coreRounds/2),Math.max(2,coreRounds-2)]:[1,3,5];
       arc.forEach((x,i)=>deck.splice(Math.min(pos[i],deck.length),0,x));
     }else deck=shuffle(singles).slice(0,coreRounds-(useRare?1:0));
-    if(useRare&&rare.length){const x=shuffle(rare)[0];deck.splice(Math.min(2+Math.floor(Math.random()*Math.max(1,deck.length-2)),deck.length),0,x);}
+    if(useRare&&rare.length){const x=shuffle(rare)[0];deck.splice(Math.min(2+Math.floor(random()*Math.max(1,deck.length-2)),deck.length),0,x);}
     if(deck.length<coreRounds){const used=new Set(deck.map(x=>x.id));deck.push(...shuffle(singles.filter(x=>!used.has(x.id))).slice(0,coreRounds-deck.length));}
     deck=deck.slice(0,coreRounds);
-    shuffle(eventData).slice(0,eventCount).forEach((x,i)=>{const p=Math.min(deck.length,1+i+Math.floor(Math.random()*Math.max(1,deck.length-i-1)));deck.splice(p,0,x);});
+    shuffle(eventData).slice(0,eventCount).forEach((x,i)=>{const p=Math.min(deck.length,1+i+Math.floor(random()*Math.max(1,deck.length-i-1)));deck.splice(p,0,x);});
     return deck.slice(0,rounds);
   }
 
@@ -165,7 +173,9 @@
     return null;
   }
 
-  function getOptions(item){const base=item.kind==='event'?(item.options||[]):(typeof interactions.contextualOptions==='function'?interactions.contextualOptions(item):item.options||[]);const s=specialChoice(item);return s?[...base,s]:base;}
+  function followUpChoice(item){if(state.followUpUsed||state.index<2||item.kind==='event')return null;return{text:'先追問一個細節，再決定怎麼回',note:'CASE TOOL // 追問權限，本局限一次',delta:[-1,6,3,-1],probe:true};}
+  function probeReply(item){const lines=[`妳沒有急著選邊站，只補問：「這件事的時間線是什麼？」`,item.persona?`對方停了一下，第一次把前因後果講得比較完整。`:`資訊多了一點，但答案沒有自動變簡單。`];return{shouldReply:true,story:null,reply:lines.join(' '),consequence:'CASE NOTE // 追問已記錄；本局不再提供第二次追問。'};}
+  function getOptions(item){const base=item.kind==='event'?(item.options||[]):(typeof interactions.contextualOptions==='function'?interactions.contextualOptions(item):item.options||[]);const s=specialChoice(item)||followUpChoice(item);return s?[...base,s]:base;}
 
   function renderRound(){
     const item=state.deck[state.index];if(!item)return;const persona=personas[item.persona]||{name:'UNKNOWN',role:'關係未定義',profile:''};state.locked=false;hideInteraction();renderRecap(item,persona);$('quote').dataset.scenarioId=item.id||'';
@@ -178,7 +188,7 @@
   }
 
   function interactionPayload(item,i){if(item.kind==='event')return{shouldReply:false,story:null,reply:'',consequence:''};const shouldReply=typeof interactions.shouldReply==='function'&&interactions.shouldReply(item);const story=typeof interactions.storyFor==='function'?interactions.storyFor(item,Math.min(i,2)):null;const reply=story?story.beats[0]:shouldReply&&typeof interactions.characterReply==='function'?interactions.characterReply(item,Math.min(i,2)):'';return{shouldReply,story,reply,consequence:story?story.beats[1]:''};}
-  function remember(item,choice,p){state.history.push({id:item.id,persona:item.persona||null,arc:item.arc||null,stage:item.stage||null,quote:item.quote,choice:choice.text,response:p.reply,consequence:p.consequence});}
+  function remember(item,choice,p,effective){state.history.push({id:item.id,persona:item.persona||null,arc:item.arc||null,stage:item.stage||null,quote:item.quote,choice:choice.text,response:p.reply,consequence:p.consequence,delta:[...effective],weight:effective.reduce((n,v)=>n+Math.abs(v),0),probe:Boolean(choice.probe)});}
 
   function applyPersona(item,delta,choice){if(item.kind==='event'||!item.persona)return;const p=personaMemory(item.persona);p.seen++;p.trust=clamp(p.trust+Math.round((delta[0]+delta[2]-Math.max(0,delta[3]))/3));p.pressure=clamp(p.pressure+Math.round((Math.max(0,delta[2])+Math.max(0,delta[1])-Math.max(0,delta[0]))/4));p.heat=clamp(p.heat+Math.round((delta[0]+delta[3]-delta[2]/2)/3));}
   function applyEventFlag(item,choiceIndex){if(item.kind!=='event')return;const cfg=meta.eventChains?.[item.id];if(cfg&&choiceIndex!==2)state.flags[cfg.flag]=true;}
@@ -186,21 +196,24 @@
   function showInteraction(item,i,p){const persona=personas[item.persona]||{role:'對方',name:'UNKNOWN'};const panel=$('interactionPanel');panel.className='interaction-panel'+(p.story?' story':'');$('interactionSpeaker').textContent=(item.rare||item.special)?persona.name:persona.role;if(p.story){$('interactionKicker').textContent=p.story.title;$('interactionText').textContent=p.story.beats[0];$('storyBeat').textContent=p.story.beats[1];$('storyBeat').classList.remove('hidden');}else{$('interactionKicker').textContent='RESPONSE // 對方回覆';$('interactionText').textContent=p.reply||'「好，我知道了。」';$('storyBeat').classList.add('hidden');}$('continueBtn').textContent='好吧，繼續 / CONTINUE';setTimeout(()=>panel.scrollIntoView({behavior:'smooth',block:'nearest'}),80);}
 
   function checkCrisis(){for(let i=0;i<4;i++){if(state.stats[i]<=0)return{index:i,side:'low'};if(state.stats[i]>=100)return{index:i,side:'high'};}return null;}
-  function choose(choice,item,button,i,effective){if(state.locked)return;state.locked=true;[...$('choices').querySelectorAll('button')].forEach(x=>x.disabled=true);button.classList.add('selected');effective.forEach((v,n)=>state.stats[n]=clamp(state.stats[n]+v));if(!state.seen.includes(item.type))state.seen.push(item.type);if(choice.special)state.specialChoices++;
+  function choose(choice,item,button,i,effective){if(state.locked)return;state.locked=true;[...$('choices').querySelectorAll('button')].forEach(x=>x.disabled=true);button.classList.add('selected');effective.forEach((v,n)=>state.stats[n]=clamp(state.stats[n]+v));if(!state.seen.includes(item.type))state.seen.push(item.type);if(choice.special)state.specialChoices++;if(choice.probe)state.followUpUsed=true;
     traitFrom(choice,effective).forEach(t=>state.traits[t]++);applyPersona(item,effective,choice);applyEventFlag(item,i);updateStats();
     $('feedback').textContent=`${choice.note} // ${effective.map((v,n)=>v?`${labels[n]} ${v>0?'+':''}${v}`:'').filter(Boolean).join(' · ')}`;$('feedback').className='feedback';$('game').classList.add('glitch');setTimeout(()=>$('game').classList.remove('glitch'),180);if(navigator.vibrate)navigator.vibrate(18);
-    const p=interactionPayload(item,i);remember(item,choice,p);persistDiscovery(item);
+    let p=choice.probe?probeReply(item):interactionPayload(item,i);remember(item,choice,p,effective);persistDiscovery(item);
     const crisis=checkCrisis();if(crisis){runtime.scheduleCrisis({crisis,item,choiceIndex:i,onFinish:()=>finish(crisis)});return;}if(p.story||p.shouldReply){setTimeout(()=>showInteraction(item,i,p),260);return;}setTimeout(advanceRound,650);
   }
 
-  function advanceRound(){hideInteraction();state.index++;updateProgress();if(state.index>=state.deck.length)finish();else renderRound();}
+  function advanceRound(){hideInteraction();state.index++;saveCheckpoint();updateProgress();if(state.index>=state.deck.length)finish();else renderRound();}
 
   function normalVerdict(){const [love,radar,standard,chaos]=state.stats;if(radar>=75&&standard>=70)return['戀愛 FBI','他甚至還沒開始說謊，妳已經發現時間線對不上。'];if(love>=75&&chaos>=70)return['紅旗收藏家','妳不是看不到警訊，妳只是常常覺得：「但他真的很有吸引力。」'];if(standard>=80)return['高標準玩家','妳不是難搞，妳只是懶得替別人的問題找理由。'];if(chaos>=75)return['混亂系女主角','妳的人生不缺故事。缺的是姐妹把手機拿走。'];if(love>=70)return['心動派玩家','妳願意相信感覺，也願意再給一次機會。'];return['清醒但會心動','妳看得到警訊，也不會完全拒絕浪漫。'];}
   function hiddenEnding(){for(const e of meta.rareEndings||[]){try{if(e.test(state))return[e.name,e.desc,`HIDDEN ENDING // ${e.id.toUpperCase()}`];}catch{}}return null;}
   function dominant(){const max=Math.max(...state.stats),i=state.stats.indexOf(max);return`${labels[i]} ${max} // ${['今晚妳最相信感覺。','今晚妳的警報器最敏銳。','今晚妳的底線最清楚。','今晚妳最容易把故事演成續集。'][i]}`;}
   function currentResult(){if(state.ending)return[state.ending.name,state.ending.description,state.ending.summary];const h=hiddenEnding();if(h)return h;const [n,d]=normalVerdict();return[n,d,dominant()];}
 
-  function finish(crisis=null){if(crisis){const r=crisisEndings[`${crisis.index}-${crisis.side}`];state.ending={name:r[0],description:r[1],summary:r[2]};}const [n,d,s]=currentResult();$('resultKicker').textContent=state.ending?'SYSTEM COLLAPSE // EXTREME ENDING':(s.startsWith('HIDDEN')?'SECRET FILE // HIDDEN ENDING':'PLAYER FILE // TONIGHT\'S VERDICT');$('className').textContent=n;$('classDesc').textContent=d;state.stats.forEach((v,i)=>$('r'+i).textContent=v);$('summaryLine').textContent=s;$('traitResult').textContent='TRAITS // '+Object.entries(state.traits).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]).slice(0,4).map(([k,v])=>`${meta.traitLabels[k]||k} ${v}`).join(' · ');$('dex').innerHTML=state.seen.map(x=>`<span>${x}</span>`).join('');$('end').classList.remove('hidden');}
+  function receipt(){const [love,radar,standard,chaos]=state.stats;const kept=standard>=65?'守住界線':love>=65?'保留心動':'保留判斷';const belief=radar>=65?'相信證據，不只相信語氣':love>=65?'願意相信關係可以變好':'先看行動，再決定投入';const next=chaos>=70?'下一次先停三秒，再決定要不要把劇情推進':'下一次照樣把需要講清楚';return{kept,belief,next};}
+  function renderCaseFile(){let box=$('caseFileResult');if(!box){box=document.createElement('section');box.id='caseFileResult';box.className='case-file-result';const anchor=$('summaryLine');anchor.parentNode.insertBefore(box,anchor.nextSibling);}const turns=[...state.history].sort((a,b)=>b.weight-a.weight).slice(0,3);const r=receipt();const caseName=state.caseFile?.title||'CASE FILE // 未分類案件';box.innerHTML=`<div class="case-file-kicker">${caseName}</div><div class="run-id">RUN ID // ${state.runId}</div><div class="case-file-title">本局三個關鍵轉折</div>${turns.length?turns.map((x,i)=>`<article class="turning-point"><b>0${i+1} // ${x.probe?'追問留下的線索':x.id}</b><span>${short(x.quote,58)}</span><em>妳選：${short(x.choice,42)}</em>${x.consequence?`<small>→ ${short(x.consequence,58)}</small>`:''}</article>`).join(''):'<p>這局還沒有留下足夠的選擇紀錄。</p>'}<div class="receipt"><b>RELATIONSHIP RECEIPT // 關係收據</b><span>妳選擇：${r.kept}</span><span>妳相信：${r.belief}</span><span>帶走一句：${r.next}</span></div></section>`;}
+  function saveEnding(){try{const saved=JSON.parse(localStorage.getItem('rfd-case-files')||'{}');const [name,,summary]=currentResult();saved[state.runId]={name,summary,caseTitle:state.caseFile?.title||'未分類案件',at:Date.now()};localStorage.setItem('rfd-case-files',JSON.stringify(saved));}catch{}}
+  function finish(crisis=null){if(crisis){const r=crisisEndings[`${crisis.index}-${crisis.side}`];state.ending={name:r[0],description:r[1],summary:r[2]};}clearCheckpoint();const [n,d,s]=currentResult();$('resultKicker').textContent=state.ending?'SYSTEM COLLAPSE // EXTREME ENDING':(s.startsWith('HIDDEN')?'SECRET FILE // HIDDEN ENDING':'PLAYER FILE // TONIGHT\'S VERDICT');$('className').textContent=n;$('classDesc').textContent=d;state.stats.forEach((v,i)=>$('r'+i).textContent=v);$('summaryLine').textContent=s;$('traitResult').textContent='TRAITS // '+Object.entries(state.traits).sort((a,b)=>b[1]-a[1]).filter(x=>x[1]).slice(0,4).map(([k,v])=>`${meta.traitLabels[k]||k} ${v}`).join(' · ');$('dex').innerHTML=state.seen.map(x=>`<span>${x}</span>`).join('');renderCaseFile();saveEnding();$('end').classList.remove('hidden');}
 
   function resultText(){const [n,,s]=currentResult();return['RED FLAG DETECTOR',`RESULT: ${n}`,`LOVE ${state.stats[0]} / RADAR ${state.stats[1]} / STANDARD ${state.stats[2]} / CHAOS ${state.stats[3]}`,s,$('traitResult').textContent].join('\n');}
   async function copyResult(){let copied=false;try{await navigator.clipboard.writeText(resultText());copied=true;}catch(error){console.warn('[RED FLAG DETECTOR] Clipboard write failed:',error);}$('copyStatus').textContent=copied?'已複製結果':'複製失敗，請允許剪貼簿權限後再試';$('copyStatus').classList.remove('hidden');setTimeout(()=>$('copyStatus').classList.add('hidden'),copied?1600:2600);}
@@ -209,14 +222,21 @@
   function wrap(ctx,text,x,y,w,h){let line='',row=0;[...text].forEach((ch,i)=>{const test=line+ch;if(ctx.measureText(test).width>w&&line){ctx.fillText(line,x,y+row*h);line=ch;row++;}else line=test;if(i===text.length-1)ctx.fillText(line,x,y+row*h);});}
 
   function persistDiscovery(item){try{const d=JSON.parse(localStorage.getItem('rfd-dex')||'{"personas":{},"events":{},"rare":{}}');if(item.kind==='event')d.events[item.id]={title:item.title,type:item.type};else{d.personas[item.persona]={role:personas[item.persona]?.role||'',profile:personas[item.persona]?.profile||''};if(item.rare||item.special)d.rare[item.id]={name:personas[item.persona]?.name||'',type:item.type};}localStorage.setItem('rfd-dex',JSON.stringify(d));}catch{}}
-  function renderDex(){let d={personas:{},events:{},rare:{}};try{d=JSON.parse(localStorage.getItem('rfd-dex')||JSON.stringify(d));}catch{}const people=Object.entries(d.personas),events=Object.entries(d.events),rare=Object.entries(d.rare);$('dexContent').innerHTML=`<div class="dex-group"><b>CHARACTERS ${people.length}/12</b>${people.length?people.map(([id,x])=>`<div class="dex-file"><strong>${x.role}</strong><small>${x.profile}</small></div>`).join(''):'<small>還沒有人物紀錄</small>'}</div><div class="dex-group"><b>EVENTS ${events.length}/${eventData.length}</b>${events.map(([id,x])=>`<div class="dex-file"><strong>${x.title}</strong><small>${x.type}</small></div>`).join('')}</div><div class="dex-group"><b>RARE FILES ${rare.length}/12</b>${rare.map(([id,x])=>`<div class="dex-file rare"><strong>${x.name}</strong><small>${x.type}</small></div>`).join('')}</div>`;}
+  function checkpoint(){try{return JSON.parse(localStorage.getItem(CHECKPOINT_KEY)||'null');}catch{return null;}}
+  function clearCheckpoint(){try{localStorage.removeItem(CHECKPOINT_KEY);}catch{}refreshResumeButton();}
+  function saveCheckpoint(){if(state.index>=state.deck.length)return;try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify({runId:state.runId,deck:state.deck,index:state.index,stats:state.stats,seen:state.seen,history:state.history,traits:state.traits,personaStats:state.personaStats,flags:state.flags,specialChoices:state.specialChoices,followUpUsed:state.followUpUsed,rounds:state.rounds,mode:state.mode,modifierId:state.modifier?.id||'',caseFile:state.caseFile}));}catch{}refreshResumeButton();}
+  function refreshResumeButton(){const b=$('resumeBtn');if(b)b.classList.toggle('hidden',!checkpoint());}
+  function restoreCheckpoint(){const saved=checkpoint();if(!saved)return;const items=new Map([...data,...eventData].map(x=>[x.id,x]));const deck=(saved.deck||[]).map(card=>typeof card==='string'?items.get(card):card).filter(Boolean);if(!deck.length||saved.index>=deck.length){clearCheckpoint();return;}Object.assign(state,{...saved,deck,stats:[...saved.stats],seen:[...saved.seen],history:[...saved.history],traits:{...state.traits,...saved.traits},personaStats:saved.personaStats||{},flags:saved.flags||{},locked:false,ending:null});random=seededRandom(state.runId);state.modifier=(meta.modifiers||[]).find(x=>x.id===saved.modifierId)||{name:'普通的一晚',desc:'沒有加成',mult:[1,1,1,1]};$('modifierName').textContent=`TONIGHT MODIFIER // ${state.modifier.name}`;$('modifierDesc').textContent=state.modifier.desc;$('modifierStrip').classList.remove('hidden');$('start').classList.add('hidden');$('end').classList.add('hidden');hideInteraction();hideRecap();updateStats();updateProgress();renderRound();}
+  function renderDex(){let d={personas:{},events:{},rare:{}};let endings={};try{d=JSON.parse(localStorage.getItem('rfd-dex')||JSON.stringify(d));endings=JSON.parse(localStorage.getItem('rfd-case-files')||'{}');}catch{}const people=Object.entries(d.personas),events=Object.entries(d.events),rare=Object.entries(d.rare),files=Object.values(endings);$('dexContent').innerHTML=`<div class="dex-group"><b>CHARACTERS ${people.length}/12</b>${people.length?people.map(([id,x])=>`<div class="dex-file"><strong>${x.role}</strong><small>${x.profile}</small></div>`).join(''):'<small>還沒有人物紀錄</small>'}</div><div class="dex-group"><b>EVENTS ${events.length}/${eventData.length}</b>${events.map(([id,x])=>`<div class="dex-file"><strong>${x.title}</strong><small>${x.type}</small></div>`).join('')}</div><div class="dex-group"><b>RARE FILES ${rare.length}/12</b>${rare.map(([id,x])=>`<div class="dex-file rare"><strong>${x.name}</strong><small>${x.type}</small></div>`).join('')}</div><div class="dex-group"><b>CASE ENDINGS ${files.length}</b>${files.length?files.slice(-12).reverse().map(x=>`<div class="dex-file rare"><strong>${x.name}</strong><small>${x.caseTitle} · ${x.summary}</small></div>`).join(''):'<small>完成一局後，案件結局會收在這裡</small>'}</div>`;}
 
-  function startGame(){state.deck=buildDeck(state.rounds);state.index=0;state.stats=[50,50,50,50];state.seen=[];state.history=[];state.locked=false;state.ending=null;state.flags={};state.specialChoices=0;state.personaStats={};Object.keys(state.traits).forEach(k=>state.traits[k]=0);state.modifier=shuffle(meta.modifiers||[])[0]||{name:'普通的一晚',desc:'沒有加成',mult:[1,1,1,1]};$('modifierName').textContent=`TONIGHT MODIFIER // ${state.modifier.name}`;$('modifierDesc').textContent=state.modifier.desc;$('modifierStrip').classList.remove('hidden');$('start').classList.add('hidden');$('end').classList.add('hidden');hideInteraction();hideRecap();updateStats();updateProgress();renderRound();}
-  function reset(){$('end').classList.add('hidden');$('start').classList.remove('hidden');}
+  function caseTitle(){const arc=state.deck.find(x=>x.arc)?.arc;const first=state.deck.find(x=>x.arc)||state.deck.find(x=>x.persona);const role=personas[first?.persona]?.role||'關係未定義';return{arc:arc||'OPEN',title:`CASE FILE // ${role}`,subtitle:arc?`連續案件 ${arc}`:'交錯事件案件'};}
+  function startGame(){const requested=$('startBtn').dataset.runId||new URLSearchParams(location.search).get('run')||makeRunId();delete $('startBtn').dataset.runId;clearCheckpoint();state.runId=requested;random=seededRandom(state.runId);state.deck=buildDeck(state.rounds);state.caseFile=caseTitle();state.index=0;state.stats=[50,50,50,50];state.seen=[];state.history=[];state.locked=false;state.ending=null;state.flags={};state.specialChoices=0;state.followUpUsed=false;state.personaStats={};Object.keys(state.traits).forEach(k=>state.traits[k]=0);state.modifier=shuffle(meta.modifiers||[])[0]||{name:'普通的一晚',desc:'沒有加成',mult:[1,1,1,1]};$('modifierName').textContent=`TONIGHT MODIFIER // ${state.modifier.name} · CASE ${state.runId}`;$('modifierDesc').textContent=state.caseFile.title;$('modifierStrip').classList.remove('hidden');$('start').classList.add('hidden');$('end').classList.add('hidden');hideInteraction();hideRecap();updateStats();updateProgress();renderRound();}
+  function reset(){$('end').classList.add('hidden');$('start').classList.remove('hidden');refreshResumeButton();}
+  function weekId(){const now=new Date();const year=now.getUTCFullYear();const first=new Date(Date.UTC(year,0,1));const week=Math.ceil((((now-first)/86400000)+first.getUTCDay()+1)/7);return`WEEK-${year}-${String(week).padStart(2,'0')}`;}
 
   document.querySelectorAll('.mode-btn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');state.rounds=Number(b.dataset.rounds);state.mode=b.dataset.mode;});
-  $('startBtn').onclick=startGame;$('again').onclick=reset;$('continueBtn').onclick=advanceRound;$('copyResult').onclick=copyResult;$('saveCard').onclick=saveResultCard;
+  $('startBtn').onclick=startGame;$('weeklyBtn').onclick=()=>{$('startBtn').dataset.runId=weekId();$('startBtn').click();};$('resumeBtn').onclick=restoreCheckpoint;$('again').onclick=reset;$('continueBtn').onclick=advanceRound;$('copyResult').onclick=copyResult;$('saveCard').onclick=saveResultCard;
   function openDex(){renderDex();$('dexOverlay').classList.remove('hidden');}$('openDex').onclick=openDex;$('openDexEnd').onclick=openDex;$('closeDex').onclick=()=>$('dexOverlay').classList.add('hidden');
   document.addEventListener('keydown',e=>{if(!$('dexOverlay').classList.contains('hidden')){if(e.key==='Escape')$('closeDex').click();return;}if(!$('start').classList.contains('hidden')||!$('end').classList.contains('hidden'))return;if(!$('interactionPanel').classList.contains('hidden')){if(e.key==='Enter'||e.key===' '){e.preventDefault();$('continueBtn').click();}return;}if(state.locked)return;const i=keys.indexOf(e.key.toLowerCase());if(i>=0){const b=$('choices').querySelector(`[data-choice="${i}"]`);if(b)b.click();}});
-  updateStats();
+  runtime.resume=restoreCheckpoint;runtime.getRun=()=>({id:state.runId,caseFile:state.caseFile,index:state.index});refreshResumeButton();updateStats();
 })();
