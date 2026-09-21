@@ -44,6 +44,10 @@
 
   const rows = allChoices();
   const before = audit(rows);
+  // Production keeps authored deltas stable. Set this only in a local tuning
+  // session when comparing a proposed global rebalance; never silently change
+  // every existing card because one new card was added.
+  const autoBalance = window.RED_FLAG_APPLY_AUTO_BALANCE === true;
 
   const semanticPresets = new Map([
     ['-3,8,12,-3',[-1,6,9,-2]],
@@ -64,7 +68,7 @@
   ]);
 
   let semanticAdjusted = 0;
-  rows.forEach(({choice,kind}) => {
+  if (autoBalance) rows.forEach(({choice,kind}) => {
     if (kind !== 'character') return;
     const signature = choice.delta.map(v => Number(v || 0)).join(',');
     const preset = semanticPresets.get(signature);
@@ -75,7 +79,7 @@
 
   const semantic = audit(rows);
 
-  rows.forEach(({choice,kind}) => {
+  if (autoBalance) rows.forEach(({choice,kind}) => {
     const factor = kind === 'event' ? 0.78 : 0.72;
     const cap = kind === 'event' ? 9 : 8;
     choice.delta = choice.delta.map(value => {
@@ -93,7 +97,7 @@
     return {positive,negative};
   });
 
-  rows.forEach(({choice}) => {
+  if (autoBalance) rows.forEach(({choice}) => {
     choice.delta = choice.delta.map((value,index) => {
       if (!value) return 0;
       const factor = value > 0 ? directionFactors[index].positive : directionFactors[index].negative;
@@ -107,7 +111,7 @@
   const targetActivity = activity.reduce((a,b)=>a+b,0) / Math.max(1,activity.length);
   const axisFactors = activity.map(value => value ? clamp(targetActivity/value,0.90,1.10) : 1);
 
-  rows.forEach(({choice}) => {
+  if (autoBalance) rows.forEach(({choice}) => {
     choice.delta = choice.delta.map((value,index) => {
       if (!value) return 0;
       const adjusted = Math.max(1, Math.round(Math.abs(value) * axisFactors[index]));
@@ -115,7 +119,7 @@
     });
   });
 
-  (window.RED_FLAG_META?.modifiers || []).forEach(modifier => {
+  if (autoBalance) (window.RED_FLAG_META?.modifiers || []).forEach(modifier => {
     if (!Array.isArray(modifier.mult)) return;
     modifier.mult = modifier.mult.map(value => {
       const balanced = 1 + (value - 1) * 0.30;
@@ -132,6 +136,7 @@
     after,
     directionFactors,
     axisFactors,
+    autoBalance,
     policy: {
       love: 'Healthy intimacy and communication may increase LOVE; LOVE is emotional investment, not gullibility.',
       chaos: 'Neutral mature choices usually leave CHAOS near zero; CHAOS moves mainly for playfulness, risk, impulse or active drama avoidance.'
