@@ -62,7 +62,7 @@
     // Copy before filtering: a deterministic CASE FILE must not inherit
     // temporary monkey patches from optional deck-audit tooling.
     const cards=[...data];
-    const rare=cards.filter(x=>x.rare);
+    const rare=cards.filter(x=>x.rare&&!x.arc);
     const singles=cards.filter(x=>!x.rare&&!x.arc);
     const arcMap=new Map();
     cards.filter(x=>x.arc).forEach(x=>{if(!arcMap.has(x.arc))arcMap.set(x.arc,[]);arcMap.get(x.arc).push(x);});
@@ -78,18 +78,21 @@
       arc.forEach((x,i)=>deck.splice(Math.min(pos[i],deck.length),0,x));
     }else deck=shuffle(singles).slice(0,coreRounds-(useRare?1:0));
     if(useRare&&rare.length){const x=shuffle(rare)[0];deck.splice(Math.min(2+Math.floor(random()*Math.max(1,deck.length-2)),deck.length),0,x);}
-    if(deck.length<coreRounds){const used=new Set(deck.map(x=>x.id));deck.push(...shuffle(singles.filter(x=>!used.has(x.id))).slice(0,coreRounds-deck.length));}
-    deck=deck.slice(0,coreRounds);
-    shuffle(eventData).slice(0,eventCount).forEach((x,i)=>{const p=Math.min(deck.length,1+i+Math.floor(random()*Math.max(1,deck.length-i-1)));deck.splice(p,0,x);});
-    return deck.slice(0,rounds);
+    const unique=list=>{const ids=new Set();return list.filter(x=>x?.id&&!ids.has(x.id)&&(ids.add(x.id),true));};
+    deck=unique(deck);
+    if(deck.length<coreRounds){const used=new Set(deck.map(x=>x.id));deck.push(...shuffle(cards.filter(x=>!used.has(x.id))).slice(0,coreRounds-deck.length));}
+    deck=unique(deck).slice(0,coreRounds);
+    const used=new Set(deck.map(x=>x.id));const events=unique(shuffle(eventData).filter(x=>!used.has(x.id))).slice(0,eventCount);
+    events.forEach((x,i)=>{const p=Math.min(deck.length,1+i+Math.floor(random()*Math.max(1,deck.length-i-1)));deck.splice(p,0,x);});
+    return unique(deck).slice(0,rounds);
   }
 
   function modifierDelta(delta){
     const m=state.modifier?.mult||[1,1,1,1];
     return delta.map((v,i)=>{
       if(!v)return 0;
-      if(state.modifier?.id==='therapy'&&i===2&&v<0)return v;
-      return Math.round(v*m[i]);
+      if(state.modifier?.id==='therapy'&&i===2&&v<0)return Math.sign(v)*Math.min(7,Math.max(1,Math.round(Math.abs(v)*.68)));
+      return Math.sign(v)*Math.min(7,Math.max(1,Math.round(Math.abs(v*m[i])*.68)));
     });
   }
 
@@ -138,7 +141,7 @@
     const c=$('portrait'),ctx=c.getContext('2d'),seed=hash(item.id),p=palette(seed%97);ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,224,154);ctx.fillStyle='#090d10';ctx.fillRect(0,0,224,154);ctx.fillStyle=p[1];ctx.fillRect(18,18,188,118);ctx.fillStyle='#0b0f12';ctx.fillRect(28,28,168,98);for(let i=0;i<24;i++){ctx.fillStyle=i%3===0?p[5]:'#1c2930';ctx.fillRect((seed+i*29)%190+12,(seed+i*17)%120+12,4,4);}ctx.fillStyle=p[5];const icon=seed%6;if(icon===0){ctx.fillRect(72,48,80,54);ctx.fillStyle='#0b0f12';ctx.fillRect(80,56,64,6);ctx.fillRect(80,70,52,6);ctx.fillRect(80,84,36,6);}if(icon===1){ctx.fillRect(92,38,40,78);ctx.fillStyle='#0b0f12';ctx.fillRect(98,46,28,54);ctx.fillRect(106,105,12,5);}if(icon===2){ctx.fillRect(64,50,96,58);ctx.fillStyle='#0b0f12';ctx.fillRect(72,58,80,42);}if(icon===3){ctx.fillRect(100,36,24,24);ctx.fillRect(96,66,32,8);ctx.fillRect(88,80,48,8);ctx.fillRect(80,94,64,8);}if(icon===4){ctx.fillRect(105,42,14,54);ctx.fillRect(105,104,14,14);}if(icon===5){ctx.fillRect(68,58,76,38);ctx.fillRect(146,68,10,18);}ctx.fillStyle='#8d928f';ctx.font='8px monospace';ctx.fillText('SYSTEM EVENT // '+item.id,62,122);
   }
 
-  function setBadge(item){const b=$('eventBadge');b.className='event-badge hidden';if(item.kind==='event'){b.textContent='◆ EVENT CARD';b.className='event-badge system-event';}else if(item.rare){b.textContent='⚠ RARE FILE';b.className='event-badge';}else if(item.arc){b.textContent=['CASE OPENED 1/3','CASE CONTINUES 2/3','CASE FINALE 3/3'][(item.stage||1)-1];b.className='event-badge arc';}}
+  function setBadge(item){const b=$('eventBadge');b.textContent='';b.className='event-badge hidden';if(item.kind==='event'){b.textContent='◆ EVENT CARD';b.className='event-badge system-event';}else if(item.rare){b.textContent='⚠ RARE FILE';b.className='event-badge';}else if(item.arc){b.textContent=['CASE OPENED 1/3','CASE CONTINUES 2/3','CASE FINALE 3/3'][(item.stage||1)-1];b.className='event-badge arc';}}
 
   function personaMemory(id){if(!state.personaStats[id])state.personaStats[id]={trust:50,pressure:50,heat:50,seen:0};return state.personaStats[id];}
   function relationshipStatus(id){const p=personaMemory(id);if(p.pressure>=75)return'對方開始退縮';if(p.heat>=78)return'情緒濃度升高';if(p.trust>=72)return'關係正在升溫';if(p.trust<=30)return'信任正在下降';if(p.seen>=2)return'熟悉感增加中';return'';}
@@ -208,7 +211,7 @@
   function checkCrisis(){for(let i=0;i<4;i++){if(state.stats[i]<=0)return{index:i,side:'low'};if(state.stats[i]>=100)return{index:i,side:'high'};}return null;}
   function choose(choice,item,button,i,effective){if(state.locked)return;state.locked=true;[...$('choices').querySelectorAll('button')].forEach(x=>x.disabled=true);button.classList.add('selected');replayClass(button,'choice-confirmed',440);fx(choice.probe?'case':'choice');effective.forEach((v,n)=>state.stats[n]=clamp(state.stats[n]+v));if(!state.seen.includes(item.type))state.seen.push(item.type);if(choice.special)state.specialChoices++;if(choice.probe)state.followUpUsed=true;
     traitFrom(choice,effective).forEach(t=>state.traits[t]++);applyPersona(item,effective,choice);applyEventFlag(item,i);updateStats();
-    $('feedback').textContent=`${choice.note} // ${effective.map((v,n)=>v?`${labels[n]} ${v>0?'+':''}${v}`:'').filter(Boolean).join(' · ')}`;$('feedback').className='feedback';$('game').classList.add('glitch');setTimeout(()=>$('game').classList.remove('glitch'),180);if(navigator.vibrate)navigator.vibrate(18);
+    $('feedback').textContent=`${choice.note} // ${effective.map((v,n)=>v?`${labels[n]} ${v>0?'+':''}${v}`:'').filter(Boolean).join(' · ')}`;$('feedback').className='feedback';setTimeout(()=>$('feedback').scrollIntoView({behavior:'smooth',block:'nearest'}),60);$('game').classList.add('glitch');setTimeout(()=>$('game').classList.remove('glitch'),180);if(navigator.vibrate)navigator.vibrate(18);
     const total=effective.reduce((sum,value)=>sum+value,0);setTimeout(()=>fx(total>=0?'up':'down'),90);let p=choice.probe?probeReply(item):interactionPayload(item,i);remember(item,choice,p,effective);const unlocked=persistDiscovery(item);if(unlocked){showUnlock(unlocked.title,unlocked.text);fx('unlock');}
     const crisis=checkCrisis();if(crisis){runtime.scheduleCrisis({crisis,item,choiceIndex:i,onFinish:()=>finish(crisis)});return;}if(p.story||p.shouldReply){setTimeout(()=>showInteraction(item,i,p),260);return;}setTimeout(advanceRound,650);
   }
