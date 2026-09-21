@@ -1,6 +1,7 @@
 (() => {
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = 'rfd-sound-enabled-v1';
+  const SFX_STORAGE_KEY = 'rfd-sfx-enabled-v1';
   const LEVELS = { normal:0.62, wtf:0.70, danger:0.78 };
   const SOURCES = {
     normal:'assets/audio/normal.mp3',
@@ -9,7 +10,9 @@
   };
 
   let enabled = true;
+  let sfxEnabled = true;
   let unlocked = false;
+  let sfxContext = null;
   let mode = '';
   let syncQueued = false;
   let transitionToken = 0;
@@ -19,7 +22,35 @@
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) enabled = stored !== '0';
+    const storedSfx = localStorage.getItem(SFX_STORAGE_KEY);
+    if (storedSfx !== null) sfxEnabled = storedSfx !== '0';
   } catch {}
+
+  function reducedMotion(){ return Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches); }
+  function audioContext(){
+    if (!sfxContext) {
+      const Context = window.AudioContext || window.webkitAudioContext;
+      if (!Context) return null;
+      try { sfxContext = new Context(); } catch { return null; }
+    }
+    return sfxContext;
+  }
+  function tone(frequency, when, duration, gain=.035, type='sine'){
+    const ctx=audioContext();if(!ctx||!sfxEnabled||reducedMotion())return;
+    const osc=ctx.createOscillator(),amp=ctx.createGain();osc.type=type;osc.frequency.setValueAtTime(frequency,when);amp.gain.setValueAtTime(0,when);amp.gain.linearRampToValueAtTime(gain,when+.012);amp.gain.exponentialRampToValueAtTime(.001,when+duration);osc.connect(amp).connect(ctx.destination);osc.start(when);osc.stop(when+duration+.02);
+  }
+  function playSfx(kind='choice', detail=0){
+    if(!sfxEnabled||reducedMotion())return;const ctx=audioContext();if(!ctx)return;if(ctx.state==='suspended')ctx.resume().catch(()=>{});const t=ctx.currentTime+.005;
+    if(kind==='choice'){tone(330,t,.055,.026,'square');tone(440,t+.055,.07,.022,'square');}
+    else if(kind==='case'){tone(523,t,.06,.03,'triangle');tone(659,t+.07,.08,.03,'triangle');tone(784,t+.15,.11,.026,'triangle');}
+    else if(kind==='event'){tone(174,t,.11,.035,'sawtooth');tone(220,t+.10,.12,.025,'square');}
+    else if(kind==='rare'){tone(660,t,.08,.032,'triangle');tone(880,t+.09,.12,.035,'triangle');}
+    else if(kind==='up'){tone(520,t,.06,.025,'sine');tone(660,t+.06,.09,.028,'sine');}
+    else if(kind==='down'){tone(300,t,.08,.028,'sine');tone(220,t+.07,.10,.026,'sine');}
+    else if(kind==='unlock'){tone(523,t,.06,.026,'triangle');tone(659,t+.06,.07,.028,'triangle');tone(784,t+.13,.10,.03,'triangle');}
+    else if(kind==='ending'){tone(392,t,.10,.035,'triangle');tone(494,t+.11,.12,.035,'triangle');tone(659,t+.25,.24,.032,'triangle');}
+    else if(kind==='crisis'){tone(120,t,.16,.04,'sawtooth');tone(96,t+.15,.22,.04,'sawtooth');}
+  }
 
   function normalizeEventDensity(){
     const data = window.RED_FLAG_DATA || [];
@@ -150,6 +181,7 @@
 
   async function unlock(){
     unlocked=true;
+    const ctx=audioContext();if(ctx?.state==='suspended')try{await ctx.resume();}catch{}
     if(!enabled||!assetsAvailable) return;
     Object.values(tracks).forEach(a=>{ try{a.load();}catch{} });
     queueSync();
@@ -161,6 +193,7 @@
     renderToggle();
     if(enabled) unlock(); else silence(.10);
   }
+  function setSfxEnabled(next){sfxEnabled=Boolean(next);try{localStorage.setItem(SFX_STORAGE_KEY,sfxEnabled?'1':'0');}catch{}renderToggle();if(sfxEnabled)audioContext()?.resume?.().catch(()=>{});}
 
   function renderToggle(){
     const btn=$('soundToggle');if(!btn)return;
@@ -168,6 +201,7 @@
     btn.textContent=active?'♪ SOUND ON':'♪ SOUND OFF';
     btn.setAttribute('aria-pressed',active?'true':'false');
     btn.classList.toggle('off',!active);
+    const sfx=$('sfxToggle');if(sfx){sfx.textContent=sfxEnabled?'✦ FX ON':'✦ FX OFF';sfx.setAttribute('aria-pressed',sfxEnabled?'true':'false');sfx.classList.toggle('off',!sfxEnabled);}
   }
 
   function installUI(){
@@ -179,6 +213,9 @@
     if(!$('soundToggle')){
       const btn=document.createElement('button');btn.type='button';btn.id='soundToggle';btn.className='audio-toggle';btn.setAttribute('aria-label','切換背景音樂');
       btn.addEventListener('click',e=>{e.stopPropagation();setEnabled(!enabled);});document.body.appendChild(btn);
+    }
+    if(!$('sfxToggle')){
+      const btn=document.createElement('button');btn.type='button';btn.id='sfxToggle';btn.className='audio-toggle sfx-toggle';btn.setAttribute('aria-label','切換操作音效');btn.addEventListener('click',e=>{e.stopPropagation();setSfxEnabled(!sfxEnabled);});document.body.appendChild(btn);
     }
     renderToggle();
   }
@@ -203,10 +240,12 @@
 
   window.RED_FLAG_AUDIO={
     unlock,setEnabled,sync:queueSync,silence,
+    setSfxEnabled,playSfx,
     get enabled(){return enabled&&assetsAvailable;},
     get mode(){return mode;},
     get level(){return mode?LEVELS[mode]:0;},
     get engine(){return 'hq-file-playback';},
-    get assetsAvailable(){return assetsAvailable;}
+    get assetsAvailable(){return assetsAvailable;},
+    get sfxEnabled(){return sfxEnabled;}
   };
 })();
