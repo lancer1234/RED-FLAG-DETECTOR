@@ -95,7 +95,8 @@
   function currentCardMode(){
     if(!activeGame()) return '';
     const role=String($('role')?.textContent||'');
-    const badge=String($('eventBadge')?.textContent||'');
+    const badgeNode=$('eventBadge');
+    const badge=badgeNode&&!badgeNode.classList.contains('hidden')?String(badgeNode.textContent||''):'';
     if(/DANGER FILE/i.test(role)||/DANGER FILE/i.test(badge)) return 'danger';
     if(/WTF/i.test(role)||/WTF/i.test(badge)||/RARE FILE|BOSS|CASE FINALE/i.test(badge)) return 'wtf';
     return 'normal';
@@ -207,7 +208,7 @@
   function installUI(){
     if(!$('audioSystemStyles')){
       const style=document.createElement('style');style.id='audioSystemStyles';
-      style.textContent=`.audio-toggle{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:45;border:1px solid #344149;background:rgba(7,9,11,.90);color:#62c7c9;font:700 8px/1 monospace;letter-spacing:.08em;padding:9px 10px;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.45)}.audio-toggle.off{color:#687775;border-color:#29343b}.audio-toggle:focus-visible{outline:1px solid #d2b06d;outline-offset:2px}@media(max-width:420px){.audio-toggle{font-size:7px;padding:8px 9px}}`;
+      style.textContent=`.audio-toggle{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));z-index:45;border:1px solid #344149;background:rgba(7,9,11,.90);color:#62c7c9;font:700 8px/1 monospace;letter-spacing:.08em;padding:9px 10px;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.45)}#soundToggle{right:max(10px,env(safe-area-inset-right))}#sfxToggle{right:calc(max(10px,env(safe-area-inset-right)) + 108px)}.audio-toggle.off{color:#687775;border-color:#29343b}.audio-toggle:focus-visible{outline:1px solid #d2b06d;outline-offset:2px}@media(max-width:420px){#sfxToggle{right:calc(max(10px,env(safe-area-inset-right)) + 96px)}.audio-toggle{font-size:7px;padding:8px 9px}}`;
       document.head.appendChild(style);
     }
     if(!$('soundToggle')){
