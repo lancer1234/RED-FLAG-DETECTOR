@@ -173,8 +173,15 @@
     return null;
   }
 
-  function followUpChoice(item){if(state.followUpUsed||state.index<2||item.kind==='event')return null;return{text:'先追問一個細節，再決定怎麼回',note:'CASE TOOL // 追問權限，本局限一次',delta:[-1,6,3,-1],probe:true};}
-  function probeReply(item){const lines=[`妳沒有急著選邊站，只補問：「這件事的時間線是什麼？」`,item.persona?`對方停了一下，第一次把前因後果講得比較完整。`:`資訊多了一點，但答案沒有自動變簡單。`];return{shouldReply:true,story:null,reply:lines.join(' '),consequence:'CASE NOTE // 追問已記錄；本局不再提供第二次追問。'};}
+  function probeContext(item){const text=`${item.type||''} ${item.quote||''}`;
+    if(/狀態很差|陪他|發燒|生病|難過|壓力/.test(text))return{choice:'先問他現在需要什麼，再決定怎麼回',question:'你現在最需要的是陪你、聽你說，還是實際幫忙？',result:'妳先把他的需要問清楚，再依自己今天真正做得到的範圍回應。'};
+    if(/取消|失聯|消失|晚回|沒回|遲到|改約/.test(text))return{choice:'先問清楚發生什麼事，再決定怎麼回',question:'剛剛到底發生什麼？你原本什麼時候知道的？',result:'他把時間點與原因說得更完整；理解不等於不用談下次怎麼做。'};
+    if(/前任|牙刷|曖昧|交友|帳號|聊天紀錄|劈腿/.test(text))return{choice:'先核對一個關鍵細節，再決定怎麼回',question:'這件事從什麼時候開始？現在還有沒有繼續？',result:'妳先把資訊補齊，沒有急著把猜測當成結論。'};
+    if(/錢|預算|分帳|收入|花費/.test(text))return{choice:'先問清楚彼此期待，再決定怎麼回',question:'你期待的分法是什麼？對你來說公平代表什麼？',result:'把期待講成具體規則後，問題終於不只剩尷尬。'};
+    return{choice:'先問清楚一個細節，再決定怎麼回',question:'我想先弄清楚：你希望我現在怎麼理解這件事？',result:'妳沒有急著選邊站，先讓對方把前因後果講得更完整。'};
+  }
+  function followUpChoice(item){if(state.followUpUsed||state.index<2||item.kind==='event')return null;return{text:probeContext(item).choice,note:'CASE TOOL // 追問權限，本局限一次',delta:[-1,6,3,-1],probe:true};}
+  function probeReply(item){const p=probeContext(item);return{shouldReply:true,story:null,reply:`妳補問：「${p.question}」${p.result}`,consequence:'CASE NOTE // 追問已記錄；本局不再提供第二次追問。'};}
   function getOptions(item){const base=item.kind==='event'?(item.options||[]):(typeof interactions.contextualOptions==='function'?interactions.contextualOptions(item):item.options||[]);const s=specialChoice(item)||followUpChoice(item);return s?[...base,s]:base;}
 
   function renderRound(){
