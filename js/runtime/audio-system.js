@@ -208,15 +208,16 @@
   function installUI(){
     if(!$('audioSystemStyles')){
       const style=document.createElement('style');style.id='audioSystemStyles';
-      style.textContent=`.audio-toggle{position:fixed;bottom:max(10px,env(safe-area-inset-bottom));z-index:45;border:1px solid #344149;background:rgba(7,9,11,.90);color:#62c7c9;font:700 8px/1 monospace;letter-spacing:.08em;padding:9px 10px;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.45)}#soundToggle{right:max(10px,env(safe-area-inset-right))}#sfxToggle{right:calc(max(10px,env(safe-area-inset-right)) + 108px)}.audio-toggle.off{color:#687775;border-color:#29343b}.audio-toggle:focus-visible{outline:1px solid #d2b06d;outline-offset:2px}@media(max-width:420px){#sfxToggle{right:calc(max(10px,env(safe-area-inset-right)) + 96px)}.audio-toggle{font-size:7px;padding:8px 9px}}`;
+      style.textContent=`.audio-controls{position:fixed;right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:45;display:flex;flex-direction:row-reverse;align-items:stretch}.audio-toggle{border:1px solid #344149;background:rgba(7,9,11,.90);color:#62c7c9;font:700 8px/1 monospace;letter-spacing:.06em;padding:9px 10px;cursor:pointer;box-shadow:0 0 0 1px rgba(0,0,0,.45)}#sfxToggle{border-right:0}.audio-toggle.off{color:#687775;border-color:#29343b}.audio-toggle:focus-visible{outline:1px solid #d2b06d;outline-offset:2px}@media(max-width:420px){.audio-toggle{font-size:7px;padding:8px 9px}}`;
       document.head.appendChild(style);
     }
+    let host=$('audioControls');if(!host){host=document.createElement('div');host.id='audioControls';host.className='audio-controls';host.setAttribute('aria-label','音效控制');document.body.appendChild(host);}
     if(!$('soundToggle')){
       const btn=document.createElement('button');btn.type='button';btn.id='soundToggle';btn.className='audio-toggle';btn.setAttribute('aria-label','切換背景音樂');
-      btn.addEventListener('click',e=>{e.stopPropagation();setEnabled(!enabled);});document.body.appendChild(btn);
+      btn.addEventListener('click',e=>{e.stopPropagation();setEnabled(!enabled);});host.appendChild(btn);
     }
     if(!$('sfxToggle')){
-      const btn=document.createElement('button');btn.type='button';btn.id='sfxToggle';btn.className='audio-toggle sfx-toggle';btn.setAttribute('aria-label','切換操作音效');btn.addEventListener('click',e=>{e.stopPropagation();setSfxEnabled(!sfxEnabled);});document.body.appendChild(btn);
+      const btn=document.createElement('button');btn.type='button';btn.id='sfxToggle';btn.className='audio-toggle sfx-toggle';btn.setAttribute('aria-label','切換操作音效');btn.addEventListener('click',e=>{e.stopPropagation();setSfxEnabled(!sfxEnabled);});host.appendChild(btn);
     }
     renderToggle();
   }
